@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.C.D Coffee Break - Cozinha</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .dashboard {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2196F3;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #2196F3;
+            padding-bottom: 10px;
+        }
+        .sala-item {
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border-left: 5px solid #4CAF50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.4em;
+        }
+        .sala-item.infantil {
+            border-left-color: #FF9800;
+        }
+        .sala-item.especial {
+            background-color: #fffacd;
+            border-left-color: #FFD700;
+            font-weight: bold;
+        }
+        .sala-nome {
+            flex: 1;
+        }
+        .sala-pessoas {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            min-width: 60px;
+            text-align: right;
+        }
+        .especial-icon {
+            margin-right: 10px;
+            font-size: 1.2em;
+        }
+        .totais {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            border: 2px solid #2196F3;
+        }
+        .total-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+        .total-label {
+            font-weight: normal;
+            color: #333;
+        }
+        .total-valor {
+            font-weight: bold;
+            color: #1976D2;
+            font-size: 1.2em;
+        }
+        .total-geral {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 3px solid #2196F3;
+        }
+        .total-geral .total-valor {
+            color: #f44336;
+            font-size: 1.5em;
+        }
+        .empty-message {
+            text-align: center;
+            color: #999;
+            font-size: 1.3em;
+            padding: 40px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 1.3em;
+            padding: 40px;
+        }
+        .demanda-section {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #fff3e0;
+            border-radius: 8px;
+            border: 2px solid #FF9800;
+        }
+        .demanda-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+        }
+        .demanda-label {
+            font-weight: normal;
+            color: #333;
+        }
+        .demanda-valor {
+            font-weight: bold;
+            color: #E65100;
+            font-size: 1.2em;
+        }
+        .alerta-produzir {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #ffebee;
+            border: 3px solid #f44336;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #c62828;
+            display: none;
+        }
+        .alerta-produzir.ativo {
+            display: block;
+        }
+        .alerta-especial {
+            margin-top: 15px;
+            padding: 20px;
+            background-color: #fffacd;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #f57c00;
+            display: none;
+        }
+        .alerta-especial.ativo {
+            display: block;
+        }
+        
+        /* Estilos para Fase 6 - Status de Produção */
+        .producao-section {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #e8f5e9;
+            border-radius: 8px;
+            border: 2px solid #4CAF50;
+        }
+        
+        .producao-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            border-left: 5px solid #4CAF50;
+        }
+        
+        .producao-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .producao-nome {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .producao-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3em;
+        }
+        
+        .status-emoji {
+            font-size: 1.5em;
+        }
+        
+        .status-texto {
+            font-weight: bold;
+        }
+        
+        .status-texto.A_PRODUZIR {
+            color: #f57f17;
+        }
+        
+        .status-texto.EM_PRODUCAO {
+            color: #d32f2f;
+        }
+        
+        .status-texto.PRONTO {
+            color: #388e3c;
+        }
+        
+        .btn-pronto {
+            padding: 12px 25px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-pronto:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-pronto:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>🍰 Cozinha</h1>
+    <div class="subtitle">Dashboard em Tempo Real</div>
+    
+    <div class="dashboard">
+        <h2>SALAS ATIVAS</h2>
+        <div id="listaSalas" class="loading">
+            Carregando salas...
+        </div>
+        
+        <div class="totais">
+            <h2>TOTAIS</h2>
+            <div class="total-item">
+                <span class="total-label">Adultos:</span>
+                <span class="total-valor" id="totalAdultos">0</span>
+            </div>
+            <div class="total-item">
+                <span class="total-label">Crianças:</span>
+                <span class="total-valor" id="totalCriancas">0</span>
+            </div>
+            <div class="total-item total-geral">
+                <span class="total-label">Total Geral:</span>
+                <span class="total-valor" id="totalGeral">0</span>
+            </div>
+        </div>
+        
+        <div class="demanda-section">
+            <h2>DEMANDA ATUAL</h2>
+            <div class="demanda-item">
+                <span class="demanda-label">Café:</span>
+                <span class="demanda-valor" id="demandaCafe">0,0 L</span>
+            </div>
+            <div class="demanda-item">
+                <span class="demanda-label">Alimento adulto:</span>
+                <span class="demanda-valor" id="demandaAlimentoAdulto">0,0 kg</span>
+            </div>
+            <div class="demanda-item">
+                <span class="demanda-label">Alimento infantil:</span>
+                <span class="demanda-valor" id="demandaAlimentoInfantil">0,0 kg</span>
+            </div>
+            
+            <div id="alertaProduzir" class="alerta-produzir">
+                ⚠️ PRODUZIR AGORA
+            </div>
+            
+            <div id="alertaEspecial" class="alerta-especial">
+                ⭐ Sala especial ativa – priorizar
+            </div>
+        </div>
+        
+        <!-- FASE 6: Status de Produção -->
+        <div class="producao-section">
+            <h2>STATUS DE PRODUÇÃO</h2>
+            
+            <!-- Item: Café -->
+            <div class="producao-item">
+                <div class="producao-header">
+                    <div class="producao-nome">☕ Café</div>
+                    <div class="producao-status">
+                        <span class="status-emoji" id="statusEmojiCafe">🟡</span>
+                        <span class="status-texto A_PRODUZIR" id="statusTextoCafe">A PRODUZIR</span>
+                    </div>
+                </div>
+                <button class="btn-pronto" id="btnProntoCafe" onclick="marcarComoPronto('cafe')" aria-label="Marcar café como pronto">
+                    ✔ MARCAR COMO PRONTO
+                </button>
+            </div>
+            
+            <!-- Item: Alimento Adulto -->
+            <div class="producao-item">
+                <div class="producao-header">
+                    <div class="producao-nome">🍰 Alimento Adulto</div>
+                    <div class="producao-status">
+                        <span class="status-emoji" id="statusEmojiAlimentoAdulto">🟡</span>
+                        <span class="status-texto A_PRODUZIR" id="statusTextoAlimentoAdulto">A PRODUZIR</span>
+                    </div>
+                </div>
+                <button class="btn-pronto" id="btnProntoAlimentoAdulto" onclick="marcarComoPronto('alimentoAdulto')" aria-label="Marcar alimento adulto como pronto">
+                    ✔ MARCAR COMO PRONTO
+                </button>
+            </div>
+            
+            <!-- Item: Alimento Infantil -->
+            <div class="producao-item">
+                <div class="producao-header">
+                    <div class="producao-nome">🧁 Alimento Infantil</div>
+                    <div class="producao-status">
+                        <span class="status-emoji" id="statusEmojiAlimentoInfantil">🟡</span>
+                        <span class="status-texto A_PRODUZIR" id="statusTextoAlimentoInfantil">A PRODUZIR</span>
+                    </div>
+                </div>
+                <button class="btn-pronto" id="btnProntoAlimentoInfantil" onclick="marcarComoPronto('alimentoInfantil')" aria-label="Marcar alimento infantil como pronto">
+                    ✔ MARCAR COMO PRONTO
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carregamento do Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Scripts do projeto -->
+    <script src="firebase.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Inicializar dashboard da cozinha quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Dashboard da Cozinha iniciado - Fase 6");
+            
+            // Inicializar estrutura de produção (Fase 6)
+            inicializarProducao();
+            
+            // Inicializar dashboard
+            iniciarDashboardCozinha();
+            
+            // Escutar mudanças no status de produção (Fase 6)
+            escutarStatusProducao(atualizarUIStatusProducao);
+        });
+        
+        /**
+         * Atualiza a interface com o status de produção atual
+         */
+        function atualizarUIStatusProducao(producao) {
+            // Atualizar café
+            if (producao.cafe) {
+                document.getElementById('statusEmojiCafe').textContent = getEmojiStatus(producao.cafe.status);
+                const textoCafe = document.getElementById('statusTextoCafe');
+                textoCafe.textContent = getTextoStatus(producao.cafe.status);
+                textoCafe.className = `status-texto ${producao.cafe.status}`;
+                
+                // Desabilitar botão se já estiver pronto
+                document.getElementById('btnProntoCafe').disabled = (producao.cafe.status === STATUS_PRODUCAO.PRONTO);
+            }
+            
+            // Atualizar alimento adulto
+            if (producao.alimentoAdulto) {
+                document.getElementById('statusEmojiAlimentoAdulto').textContent = getEmojiStatus(producao.alimentoAdulto.status);
+                const textoAdulto = document.getElementById('statusTextoAlimentoAdulto');
+                textoAdulto.textContent = getTextoStatus(producao.alimentoAdulto.status);
+                textoAdulto.className = `status-texto ${producao.alimentoAdulto.status}`;
+                
+                // Desabilitar botão se já estiver pronto
+                document.getElementById('btnProntoAlimentoAdulto').disabled = (producao.alimentoAdulto.status === STATUS_PRODUCAO.PRONTO);
+            }
+            
+            // Atualizar alimento infantil
+            if (producao.alimentoInfantil) {
+                document.getElementById('statusEmojiAlimentoInfantil').textContent = getEmojiStatus(producao.alimentoInfantil.status);
+                const textoInfantil = document.getElementById('statusTextoAlimentoInfantil');
+                textoInfantil.textContent = getTextoStatus(producao.alimentoInfantil.status);
+                textoInfantil.className = `status-texto ${producao.alimentoInfantil.status}`;
+                
+                // Desabilitar botão se já estiver pronto
+                document.getElementById('btnProntoAlimentoInfantil').disabled = (producao.alimentoInfantil.status === STATUS_PRODUCAO.PRONTO);
+            }
+        }
+    </script>
+</body>
+</html>

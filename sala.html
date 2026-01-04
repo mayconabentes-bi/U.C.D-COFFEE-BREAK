@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.C.D Coffee Break - Sala</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2196F3;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #2196F3;
+            padding-bottom: 10px;
+        }
+        .sala-selector {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+            font-size: 1.1em;
+        }
+        select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background-color: white;
+            cursor: pointer;
+        }
+        .checkin-section {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            display: none;
+        }
+        .checkin-section.ativo {
+            display: block;
+        }
+        .contador {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .contador-valor {
+            font-size: 3em;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .contador-label {
+            font-size: 1.2em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        button {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-adicionar {
+            background-color: #4CAF50;
+        }
+        .btn-adicionar:hover {
+            background-color: #45a049;
+        }
+        .btn-remover {
+            background-color: #f44336;
+        }
+        .btn-remover:hover {
+            background-color: #da190b;
+        }
+        .btn-remover:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        /* Status de Produção - Fase 6 */
+        .status-producao {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            border: 2px solid #2196F3;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+            background-color: white;
+            border-radius: 6px;
+            font-size: 1.1em;
+        }
+        .status-nome {
+            font-weight: 500;
+            color: #333;
+        }
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        .status-badge.A_PRODUZIR {
+            background-color: #fff9c4;
+            color: #f57f17;
+        }
+        .status-badge.EM_PRODUCAO {
+            background-color: #ffcdd2;
+            color: #d32f2f;
+        }
+        .status-badge.PRONTO {
+            background-color: #c8e6c9;
+            color: #388e3c;
+        }
+        .notificacao-pronto {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #c8e6c9;
+            border: 2px solid #4CAF50;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2e7d32;
+            animation: pulse 2s infinite;
+            display: none;
+        }
+        .notificacao-pronto.ativo {
+            display: block;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🏠 Sala</h1>
+    <div class="subtitle">Check-in de Participantes</div>
+    
+    <div class="container">
+        <!-- Seletor de Sala -->
+        <div class="sala-selector">
+            <label for="selectSala">Selecione sua sala:</label>
+            <select id="selectSala">
+                <option value="">Carregando salas...</option>
+            </select>
+        </div>
+        
+        <!-- Seção de Check-in -->
+        <div id="checkinSection" class="checkin-section">
+            <h2>CHECK-IN</h2>
+            
+            <div class="contador">
+                <div class="contador-valor" id="contadorPessoas">0</div>
+                <div class="contador-label">pessoas presentes</div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn-adicionar" onclick="adicionarPessoa()" aria-label="Adicionar pessoa">+ ADICIONAR</button>
+                <button class="btn-remover" id="btnRemover" onclick="removerPessoa()" aria-label="Remover pessoa">- REMOVER</button>
+            </div>
+        </div>
+        
+        <!-- Status de Produção (Fase 6) -->
+        <div class="status-producao">
+            <h2>STATUS DA PRODUÇÃO</h2>
+            
+            <div class="status-item">
+                <span class="status-nome">☕ Café</span>
+                <div class="status-badge A_PRODUZIR" id="badgeCafe">
+                    <span id="emojiCafe">🟡</span>
+                    <span id="textoCafe">A PRODUZIR</span>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-nome">🍰 Alimento Adulto</span>
+                <div class="status-badge A_PRODUZIR" id="badgeAlimentoAdulto">
+                    <span id="emojiAlimentoAdulto">🟡</span>
+                    <span id="textoAlimentoAdulto">A PRODUZIR</span>
+                </div>
+            </div>
+            
+            <div class="status-item">
+                <span class="status-nome">🧁 Alimento Infantil</span>
+                <div class="status-badge A_PRODUZIR" id="badgeAlimentoInfantil">
+                    <span id="emojiAlimentoInfantil">🟡</span>
+                    <span id="textoAlimentoInfantil">A PRODUZIR</span>
+                </div>
+            </div>
+            
+            <!-- Notificações quando itens ficam prontos -->
+            <div id="notificacaoCafe" class="notificacao-pronto">
+                ☕ Café pronto!
+            </div>
+            <div id="notificacaoAlimentoAdulto" class="notificacao-pronto">
+                🍰 Lanche adulto pronto!
+            </div>
+            <div id="notificacaoAlimentoInfantil" class="notificacao-pronto">
+                🧁 Lanche infantil pronto!
+            </div>
+        </div>
+    </div>
+
+    <!-- Carregamento do Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Scripts do projeto -->
+    <script src="firebase.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Variável para armazenar a sala selecionada
+        let salaSelecionada = null;
+        
+        // Estado para rastrear status anterior e detectar mudanças para PRONTO
+        const estadoStatusAnterior = {
+            cafe: null,
+            alimentoAdulto: null,
+            alimentoInfantil: null
+        };
+        
+        // Inicializar página da sala
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Página da Sala iniciada - Fase 6");
+            
+            // Inicializar estrutura de produção (Fase 6)
+            inicializarProducao();
+            
+            // Carregar lista de salas
+            carregarSalas();
+            
+            // Configurar evento de mudança no select
+            document.getElementById('selectSala').addEventListener('change', selecionarSala);
+            
+            // Escutar mudanças no status de produção (Fase 6)
+            escutarStatusProducao(atualizarStatusProducaoSala);
+        });
+        
+        /**
+         * Carrega a lista de salas disponíveis
+         */
+        function carregarSalas() {
+            const salasRef = database.ref('/salas');
+            
+            salasRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const salas = snapshot.val();
+                        preencherSelectSalas(salas);
+                    } else {
+                        document.getElementById('selectSala').innerHTML = 
+                            '<option value="">Nenhuma sala criada ainda</option>';
+                    }
+                })
+                .catch((error) => {
+                    console.error("❌ Erro ao carregar salas:", error);
+                    document.getElementById('selectSala').innerHTML = 
+                        '<option value="">Erro ao carregar salas</option>';
+                });
+        }
+        
+        /**
+         * Preenche o select com as salas disponíveis
+         */
+        function preencherSelectSalas(salas) {
+            const select = document.getElementById('selectSala');
+            select.innerHTML = '<option value="">Selecione uma sala...</option>';
+            
+            // Converter para array e ordenar
+            const salasArray = Object.entries(salas).map(([id, sala]) => ({
+                id,
+                ...sala
+            }));
+            
+            salasArray.sort((a, b) => {
+                if (a.tipo === 'adulto' && b.tipo === 'infantil') return -1;
+                if (a.tipo === 'infantil' && b.tipo === 'adulto') return 1;
+                return a.nome.localeCompare(b.nome);
+            });
+            
+            // Adicionar opções
+            salasArray.forEach(sala => {
+                const option = document.createElement('option');
+                option.value = sala.id;
+                option.textContent = sala.nome;
+                if (sala.especial) {
+                    option.textContent += ' ⭐';
+                }
+                select.appendChild(option);
+            });
+        }
+        
+        /**
+         * Seleciona uma sala e inicia o monitoramento
+         */
+        function selecionarSala() {
+            const salaId = document.getElementById('selectSala').value;
+            
+            if (!salaId) {
+                document.getElementById('checkinSection').classList.remove('ativo');
+                salaSelecionada = null;
+                return;
+            }
+            
+            salaSelecionada = salaId;
+            document.getElementById('checkinSection').classList.add('ativo');
+            
+            console.log(`📍 Sala selecionada: ${salaId}`);
+            
+            // Escutar mudanças nesta sala
+            escutarSala(salaId);
+        }
+        
+        /**
+         * Escuta mudanças em tempo real para uma sala específica
+         */
+        function escutarSala(salaId) {
+            const salaRef = database.ref(`/salas/${salaId}`);
+            
+            salaRef.on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    const sala = snapshot.val();
+                    atualizarContador(sala.pessoas || 0);
+                }
+            }, (error) => {
+                console.error("❌ Erro ao escutar sala:", error);
+            });
+        }
+        
+        /**
+         * Atualiza o contador de pessoas na interface
+         */
+        function atualizarContador(quantidade) {
+            document.getElementById('contadorPessoas').textContent = quantidade;
+            
+            // Desabilitar botão de remover se for zero
+            document.getElementById('btnRemover').disabled = (quantidade === 0);
+        }
+        
+        /**
+         * Adiciona uma pessoa à sala
+         */
+        function adicionarPessoa() {
+            if (!salaSelecionada) return;
+            
+            const salaRef = database.ref(`/salas/${salaSelecionada}`);
+            
+            salaRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const sala = snapshot.val();
+                        const novaQuantidade = (sala.pessoas || 0) + 1;
+                        return salaRef.update({ pessoas: novaQuantidade });
+                    }
+                })
+                .then(() => {
+                    console.log("✅ Pessoa adicionada");
+                })
+                .catch((error) => {
+                    console.error("❌ Erro ao adicionar pessoa:", error);
+                });
+        }
+        
+        /**
+         * Remove uma pessoa da sala
+         */
+        function removerPessoa() {
+            if (!salaSelecionada) return;
+            
+            const salaRef = database.ref(`/salas/${salaSelecionada}`);
+            
+            salaRef.once('value')
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const sala = snapshot.val();
+                        const quantidadeAtual = sala.pessoas || 0;
+                        
+                        if (quantidadeAtual > 0) {
+                            const novaQuantidade = quantidadeAtual - 1;
+                            return salaRef.update({ pessoas: novaQuantidade });
+                        }
+                    }
+                })
+                .then(() => {
+                    console.log("✅ Pessoa removida");
+                })
+                .catch((error) => {
+                    console.error("❌ Erro ao remover pessoa:", error);
+                });
+        }
+        
+        /**
+         * Atualiza a interface com o status de produção atual (Fase 6)
+         */
+        function atualizarStatusProducaoSala(producao) {
+            // Atualizar café
+            if (producao.cafe) {
+                document.getElementById('emojiCafe').textContent = getEmojiStatus(producao.cafe.status);
+                document.getElementById('textoCafe').textContent = getTextoStatus(producao.cafe.status);
+                document.getElementById('badgeCafe').className = `status-badge ${producao.cafe.status}`;
+                
+                // Mostrar notificação se ficou pronto
+                if (estadoStatusAnterior.cafe !== STATUS_PRODUCAO.PRONTO && producao.cafe.status === STATUS_PRODUCAO.PRONTO) {
+                    document.getElementById('notificacaoCafe').classList.add('ativo');
+                    setTimeout(() => {
+                        document.getElementById('notificacaoCafe').classList.remove('ativo');
+                    }, 10000); // Ocultar após 10 segundos
+                }
+                estadoStatusAnterior.cafe = producao.cafe.status;
+            }
+            
+            // Atualizar alimento adulto
+            if (producao.alimentoAdulto) {
+                document.getElementById('emojiAlimentoAdulto').textContent = getEmojiStatus(producao.alimentoAdulto.status);
+                document.getElementById('textoAlimentoAdulto').textContent = getTextoStatus(producao.alimentoAdulto.status);
+                document.getElementById('badgeAlimentoAdulto').className = `status-badge ${producao.alimentoAdulto.status}`;
+                
+                // Mostrar notificação se ficou pronto
+                if (estadoStatusAnterior.alimentoAdulto !== STATUS_PRODUCAO.PRONTO && producao.alimentoAdulto.status === STATUS_PRODUCAO.PRONTO) {
+                    document.getElementById('notificacaoAlimentoAdulto').classList.add('ativo');
+                    setTimeout(() => {
+                        document.getElementById('notificacaoAlimentoAdulto').classList.remove('ativo');
+                    }, 10000);
+                }
+                estadoStatusAnterior.alimentoAdulto = producao.alimentoAdulto.status;
+            }
+            
+            // Atualizar alimento infantil
+            if (producao.alimentoInfantil) {
+                document.getElementById('emojiAlimentoInfantil').textContent = getEmojiStatus(producao.alimentoInfantil.status);
+                document.getElementById('textoAlimentoInfantil').textContent = getTextoStatus(producao.alimentoInfantil.status);
+                document.getElementById('badgeAlimentoInfantil').className = `status-badge ${producao.alimentoInfantil.status}`;
+                
+                // Mostrar notificação se ficou pronto
+                if (estadoStatusAnterior.alimentoInfantil !== STATUS_PRODUCAO.PRONTO && producao.alimentoInfantil.status === STATUS_PRODUCAO.PRONTO) {
+                    document.getElementById('notificacaoAlimentoInfantil').classList.add('ativo');
+                    setTimeout(() => {
+                        document.getElementById('notificacaoAlimentoInfantil').classList.remove('ativo');
+                    }, 10000);
+                }
+                estadoStatusAnterior.alimentoInfantil = producao.alimentoInfantil.status;
+            }
+        }
+    </script>
+</body>
+</html>
