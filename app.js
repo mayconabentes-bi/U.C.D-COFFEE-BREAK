@@ -538,9 +538,6 @@ function getTextoStatus(status) {
     }
 }
 
-// Variável para armazenar demanda anterior e detectar mudanças
-let demandaAnterior = { cafe: 0, alimentoAdulto: 0, alimentoInfantil: 0 };
-
 /**
  * Verifica se a demanda mudou e reseta status se necessário
  * @param {Object} demandaAtual - Demanda atual calculada
