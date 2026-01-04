@@ -291,7 +291,7 @@
          * Carrega a lista de salas disponíveis
          */
         function carregarSalas() {
-            const salasRef = database.ref('/salas');
+            const salasRef = db.ref('/salas');
             
             salasRef.once('value')
                 .then((snapshot) => {
@@ -366,7 +366,7 @@
          * Escuta mudanças em tempo real para uma sala específica
          */
         function escutarSala(salaId) {
-            const salaRef = database.ref(`/salas/${salaId}`);
+            const salaRef = db.ref(`/salas/${salaId}`);
             
             salaRef.on('value', (snapshot) => {
                 if (snapshot.exists()) {
@@ -394,7 +394,7 @@
         function adicionarPessoa() {
             if (!salaSelecionada) return;
             
-            const salaRef = database.ref(`/salas/${salaSelecionada}`);
+            const salaRef = db.ref(`/salas/${salaSelecionada}`);
             
             salaRef.once('value')
                 .then((snapshot) => {
@@ -418,7 +418,7 @@
         function removerPessoa() {
             if (!salaSelecionada) return;
             
-            const salaRef = database.ref(`/salas/${salaSelecionada}`);
+            const salaRef = db.ref(`/salas/${salaSelecionada}`);
             
             salaRef.once('value')
                 .then((snapshot) => {
