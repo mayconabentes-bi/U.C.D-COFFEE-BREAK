@@ -355,6 +355,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log("🚀 Dashboard da Cozinha iniciado - Fase 6");
             
+            // Verificar se Firebase está configurado antes de continuar
+            if (!db) {
+                console.error("❌ Firebase não está inicializado. Configure o arquivo firebase.js primeiro.");
+                document.getElementById('listaSalas').innerHTML = 
+                    '<div class="empty-message">Erro: Firebase não configurado. Verifique o arquivo firebase.js</div>';
+                return; // Não continuar a inicialização
+            }
+            
             // Inicializar estrutura de produção (Fase 6)
             inicializarProducao();
             
