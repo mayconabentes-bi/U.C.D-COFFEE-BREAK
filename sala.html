@@ -274,6 +274,14 @@
         document.addEventListener('DOMContentLoaded', function() {
             console.log("🚀 Página da Sala iniciada - Fase 6");
             
+            // Verificar se Firebase está configurado antes de continuar
+            if (!db) {
+                console.error("❌ Firebase não está inicializado. Configure o arquivo firebase.js primeiro.");
+                document.getElementById('selectSala').innerHTML = 
+                    '<option value="">Erro: Firebase não configurado</option>';
+                return; // Não continuar a inicialização
+            }
+            
             // Inicializar estrutura de produção (Fase 6)
             inicializarProducao();
             
@@ -291,14 +299,25 @@
          * Carrega a lista de salas disponíveis
          */
         function carregarSalas() {
+            // Verificar se Firebase está disponível
+            if (!db) {
+                console.error("❌ Firebase não está inicializado ao carregar salas.");
+                document.getElementById('selectSala').innerHTML = 
+                    '<option value="">Erro: Firebase não configurado</option>';
+                return;
+            }
+            
+            console.log("📋 Carregando salas do Firebase...");
             const salasRef = db.ref('/salas');
             
             salasRef.once('value')
                 .then((snapshot) => {
                     if (snapshot.exists()) {
                         const salas = snapshot.val();
+                        console.log("✅ Salas carregadas com sucesso:", Object.keys(salas).length, "salas encontradas");
                         preencherSelectSalas(salas);
                     } else {
+                        console.log("⚠️ Nenhuma sala encontrada no Firebase");
                         document.getElementById('selectSala').innerHTML = 
                             '<option value="">Nenhuma sala criada ainda</option>';
                     }
@@ -314,6 +333,7 @@
          * Preenche o select com as salas disponíveis
          */
         function preencherSelectSalas(salas) {
+            console.log("🔄 Preenchendo select com salas...");
             const select = document.getElementById('selectSala');
             select.innerHTML = '<option value="">Selecione uma sala...</option>';
             
@@ -322,6 +342,8 @@
                 id,
                 ...sala
             }));
+            
+            console.log("📊 Total de salas para exibir:", salasArray.length);
             
             salasArray.sort((a, b) => {
                 if (a.tipo === 'adulto' && b.tipo === 'infantil') return -1;
@@ -338,7 +360,10 @@
                     option.textContent += ' ⭐';
                 }
                 select.appendChild(option);
+                console.log(`  ➕ Adicionada: ${sala.nome} (${sala.id})`);
             });
+            
+            console.log("✅ Select preenchido com sucesso!");
         }
         
         /**

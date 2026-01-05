@@ -267,16 +267,26 @@ function marcarSalaEspecial(salaId, isChecked) {
  * Configura listener em tempo real para mudanças nas salas
  */
 function iniciarDashboardCozinha() {
+    // Verificar se Firebase está disponível
+    if (!db) {
+        console.error("❌ Firebase não está inicializado ao iniciar dashboard.");
+        document.getElementById('listaSalas').innerHTML = 
+            '<div class="empty-message">Erro: Firebase não configurado</div>';
+        return;
+    }
+    
+    console.log("📊 Iniciando listener em tempo real para salas...");
     const salasRef = db.ref('/salas');
     
     // Listener em tempo real - onValue dispara sempre que há mudanças
     salasRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
             const salas = snapshot.val();
-            console.log("🔄 Atualização em tempo real:", salas);
+            console.log("🔄 Atualização em tempo real:", Object.keys(salas).length, "salas encontradas");
             exibirDashboardCozinha(salas);
         } else {
             // Nenhuma sala criada ainda
+            console.log("⚠️ Nenhuma sala encontrada no Firebase");
             document.getElementById('listaSalas').innerHTML = 
                 '<div class="empty-message">Nenhuma sala criada ainda.</div>';
             atualizarTotais(0, 0);
@@ -295,9 +305,11 @@ function iniciarDashboardCozinha() {
  * Exibe o dashboard da cozinha com as salas e totais
  */
 function exibirDashboardCozinha(salas) {
+    console.log("🖼️ Exibindo dashboard com salas:", Object.keys(salas));
     const listaSalas = document.getElementById('listaSalas');
     
     if (!salas || Object.keys(salas).length === 0) {
+        console.log("⚠️ Nenhuma sala para exibir");
         listaSalas.innerHTML = '<div class="empty-message">Nenhuma sala criada ainda.</div>';
         atualizarTotais(0, 0);
         // Atualizar demanda para zero
@@ -314,6 +326,8 @@ function exibirDashboardCozinha(salas) {
         id,
         ...sala
     }));
+    
+    console.log("📋 Total de salas a exibir:", salasArray.length);
     
     // Ordenar: salas especiais primeiro, depois por tipo (adulto, infantil)
     salasArray.sort((a, b) => {
@@ -354,7 +368,11 @@ function exibirDashboardCozinha(salas) {
         div.appendChild(nomeDiv);
         div.appendChild(pessoasDiv);
         listaSalas.appendChild(div);
+        
+        console.log(`  ✅ Sala exibida: ${sala.nome} - ${sala.pessoas || 0} pessoas`);
     });
+    
+    console.log("✅ Dashboard atualizado com sucesso!");
     
     // Calcular e atualizar totais
     calcularTotais(salasArray);
