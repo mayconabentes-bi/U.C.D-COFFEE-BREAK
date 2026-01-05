@@ -22,21 +22,22 @@ Realtime Database instance configured correctly.
 
 O **U.C.D Coffee Break** é uma solução de baixo custo para gerenciamento de eventos e recursos em igrejas. O sistema está sendo desenvolvido em fases, começando pela fundação técnica até chegar a um sistema completo de gestão.
 
-## 📍 Status Atual: FASE 6
+## 📍 Status Atual: FASE 7
 
-### O que é a Fase 6?
+### O que é a Fase 7?
 
-A **Fase 6** implementa a **Confirmação de Produção** pela cozinha, permitindo que a equipe marque quando cada item está pronto e que essa informação seja exibida em tempo real para todos (cozinha, coordenação e voluntários). Nesta fase:
+A **Fase 7** implementa o **Controle de Estoque** completo, fechando o ciclo operacional do sistema. Nesta fase:
 
-- ✅ Estrutura `/producao` no Firebase com status de cada item
-- ✅ Dashboard da cozinha com botões para marcar itens como PRONTO
-- ✅ Status visual com emojis (🟡 A PRODUZIR, 🔴 EM PRODUÇÃO, 🟢 PRONTO)
-- ✅ Página de sala (sala.html) para voluntários com check-in
-- ✅ Exibição em tempo real do status de produção para voluntários
-- ✅ Notificações visuais quando itens ficam prontos
-- ✅ Reset automático quando a demanda aumenta (mais pessoas entram)
+- ✅ Estrutura `/estoque` no Firebase com itens de estoque
+- ✅ Página dedicada `estoque.html` para gestão de insumos
+- ✅ Entrada e saída manual de estoque
+- ✅ Ajuste de estoque mínimo por item
+- ✅ Baixa automática de estoque quando produção é marcada como PRONTA
+- ✅ Alertas visuais de estoque mínimo na cozinha e no estoque
+- ✅ Bloqueio de produção quando estoque insuficiente
+- ✅ Validação para nunca permitir valores negativos
 
-### Estrutura no Firebase (Fase 6)
+### Estrutura no Firebase (Fase 7)
 
 ```json
 {
@@ -66,11 +67,56 @@ A **Fase 6** implementa a **Confirmação de Produção** pela cozinha, permitin
       "status": "A_PRODUZIR" | "EM_PRODUCAO" | "PRONTO",
       "atualizadoEm": string
     }
+  },
+  "estoque": {
+    "cafe": {
+      "nome": "Café",
+      "unidade": "litros",
+      "quantidadeAtual": number,
+      "estoqueMinimo": number
+    },
+    "alimentoAdulto": {
+      "nome": "Alimento Adulto",
+      "unidade": "kg",
+      "quantidadeAtual": number,
+      "estoqueMinimo": number
+    },
+    "alimentoInfantil": {
+      "nome": "Alimento Infantil",
+      "unidade": "kg",
+      "quantidadeAtual": number,
+      "estoqueMinimo": number
+    }
   }
 }
 ```
 
 ### Funcionalidades Implementadas
+
+#### Controle de Estoque (Fase 7)
+- Nova página `estoque.html` dedicada à gestão de insumos
+- Para cada item do estoque:
+  - Visualização de quantidade atual e estoque mínimo
+  - Entrada manual com botões rápidos (+1, +5, +10)
+  - Saída manual (nunca permite valores negativos)
+  - Ajuste de estoque mínimo
+  - Alerta visual quando quantidade ≤ estoque mínimo
+- Baixa automática de estoque:
+  - Quando a cozinha marca item como PRONTO
+  - Calcula quantidade baseada na demanda atual
+  - Subtrai automaticamente do estoque correspondente
+  - Garantia de baixa única por produção confirmada
+- Dashboard da cozinha atualizado:
+  - Exibe estoque atual de cada item
+  - Alertas visuais de estoque mínimo
+  - Bloqueio de produção se estoque insuficiente
+  - Mensagem clara: "Estoque insuficiente para produzir"
+  - Link direto para página de gerenciamento de estoque
+- Regras de segurança:
+  - Check-in nunca altera estoque
+  - Apenas `estoque.html` permite entrada/saída manual
+  - Cozinha NÃO altera estoque manualmente
+  - Estoque só é reduzido quando produção é marcada como PRONTO
 
 #### Confirmação de Produção (Fase 6)
 - Página da cozinha com seção de status de produção
@@ -212,14 +258,15 @@ Os dados são salvos no Firebase na seguinte estrutura:
 
 ### ⚠️ O que NÃO está nesta fase
 
-A Fase 6 **NÃO** inclui:
-- ❌ Controle de estoque
-- ❌ Baixa automática de estoque
+A Fase 7 **NÃO** inclui:
+- ❌ Histórico de movimentações de estoque
 - ❌ Histórico de produções
 - ❌ Edição de parâmetros de consumo
 - ❌ Alertas sonoros
+- ❌ Autenticação de usuários
+- ❌ Relatórios e gráficos
 
-Essas funcionalidades serão implementadas nas próximas fases (Fase 7).
+O sistema está completo e operacional para as necessidades básicas de gestão de eventos em igrejas.
 
 ## 🛠️ Stack Tecnológica
 
@@ -233,8 +280,9 @@ Essas funcionalidades serão implementadas nas próximas fases (Fase 7).
 ```
 /
 ├── index.html      # Página principal (configuração)
-├── cozinha.html    # Dashboard da cozinha (Fases 4, 5 e 6)
+├── cozinha.html    # Dashboard da cozinha (Fases 4, 5, 6 e 7)
 ├── sala.html       # Página da sala para voluntários (Fase 6)
+├── estoque.html    # Controle de estoque (Fase 7)
 ├── app.js          # Lógica da aplicação
 ├── firebase.js     # Inicialização do Firebase
 └── README.md       # Este arquivo
@@ -318,6 +366,7 @@ Este é o passo mais importante! Sem ele, o sistema não funcionará.
    - **index.html** - Para configuração de salas
    - **cozinha.html** - Para visualização do dashboard da cozinha
    - **sala.html** - Para check-in de voluntários e visualização do status de produção
+   - **estoque.html** - Para gerenciamento de estoque (Fase 7)
    
    Você pode simplesmente clicar duas vezes nos arquivos ou usar um servidor local simples:
    ```bash
@@ -348,10 +397,16 @@ Este é o passo mais importante! Sem ele, o sistema não funcionará.
      - Quantidade de alimento infantil necessária
    - Quando houver pessoas presentes, verá o alerta "PRODUZIR AGORA"
    - Se houver sala especial ativa, verá o alerta "Sala especial ativa – priorizar"
+   - **FASE 7**: Visualize o estoque atual:
+     - Quantidade disponível de cada item
+     - Alertas visuais quando estoque ≤ mínimo
+     - Alertas de estoque insuficiente para produção
+     - Link para gerenciar estoque
    - **FASE 6**: Marque os itens como prontos:
      - Clique em "✔ MARCAR COMO PRONTO" para cada item produzido
      - Acompanhe o status visual com emojis (🟡 🔴 🟢)
      - O botão é desabilitado automaticamente quando o item está pronto
+     - **FASE 7**: Estoque é baixado automaticamente ao marcar como pronto
 
 3. **Página da Sala** (sala.html):
    - Abra em dispositivos nas salas (tablets, celulares)
@@ -365,9 +420,24 @@ Este é o passo mais importante! Sem ele, o sistema não funcionará.
      - Notificações visuais aparecem automaticamente quando cada item fica pronto
    - Saiba quando servir os alimentos
 
-4. **Atualização em Tempo Real**:
+4. **Controle de Estoque** (estoque.html):
+   - **FASE 7**: Página dedicada à gestão de insumos
+   - Visualize todos os itens do estoque:
+     - Quantidade atual
+     - Estoque mínimo
+     - Status (OK ou Alerta)
+   - Realize entrada manual:
+     - Botões rápidos: +1, +5, +10
+   - Realize saída manual:
+     - Botão -1 (nunca permite valores negativos)
+   - Ajuste o estoque mínimo de cada item
+   - Veja alertas visuais de itens com estoque baixo
+   - Resumo de alertas no topo da página
+
+5. **Atualização em Tempo Real**:
    - Qualquer mudança na contagem de pessoas em uma sala
    - É automaticamente refletida no dashboard da cozinha
+   - Estoque atualizado em tempo real em todas as páginas
    - Sem necessidade de recarregar a página
 
 ### Uso via GitHub Pages
@@ -435,7 +505,7 @@ Para produção, sempre implemente regras de segurança adequadas.
 - [x] Destaque visual para sala especial
 - [x] Atualização automática via listeners
 
-### Fase 5 - Cálculo de Demanda ✅ (ATUAL)
+### Fase 5 - Cálculo de Demanda ✅ (CONCLUÍDA)
 - [x] Cálculo de consumo de café/alimentos
 - [x] Parâmetros fixos de consumo (adulto: 150ml café + 250g alimento, criança: 0ml café + 180g alimento)
 - [x] Margem de segurança de 10%
@@ -444,7 +514,7 @@ Para produção, sempre implemente regras de segurança adequadas.
 - [x] Alerta "Sala especial ativa" quando existe sala especial
 - [x] Interface de demanda integrada ao dashboard da cozinha
 
-### Fase 6 - Confirmação de Produção ✅ (ATUAL)
+### Fase 6 - Confirmação de Produção ✅ (CONCLUÍDA)
 - [x] Estrutura `/producao` no Firebase
 - [x] Atualização de status pela cozinha
 - [x] Status visuais (🟡 A_PRODUZIR, 🔴 EM_PRODUCAO, 🟢 PRONTO)
@@ -454,10 +524,18 @@ Para produção, sempre implemente regras de segurança adequadas.
 - [x] Notificações quando itens ficam prontos
 - [x] Reset automático quando demanda aumenta
 
-### Fase 7 - Controle de Estoque (Próxima)
-- [ ] Controle de estoque de insumos
-- [ ] Baixa automática de estoque
-- [ ] Histórico de produções
+### Fase 7 - Controle de Estoque ✅ (ATUAL - COMPLETA)
+- [x] Estrutura `/estoque` no Firebase
+- [x] Página estoque.html para gestão de insumos
+- [x] Entrada manual de estoque (+1, +5, +10)
+- [x] Saída manual de estoque (nunca permite negativos)
+- [x] Ajuste de estoque mínimo por item
+- [x] Baixa automática de estoque ao marcar produção como PRONTA
+- [x] Alertas visuais de estoque mínimo
+- [x] Exibição de estoque no dashboard da cozinha
+- [x] Verificação de estoque suficiente antes da produção
+- [x] Bloqueio de produção quando estoque insuficiente
+- [x] Sistema completo e operacional
 
 ## 📝 Licença
 

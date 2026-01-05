@@ -501,11 +501,76 @@ function atualizarStatusProducao(item, novoStatus) {
 }
 
 /**
- * Marca um item como PRONTO
+ * Marca um item como PRONTO e realiza baixa automática do estoque (Fase 7)
  * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
  */
 function marcarComoPronto(item) {
-    atualizarStatusProducao(item, STATUS_PRODUCAO.PRONTO);
+    // Verificar se já foi marcado como pronto antes
+    const producaoRef = db.ref(`/producao/${item}`);
+    
+    producaoRef.once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                const producaoData = snapshot.val();
+                
+                // Se já está pronto, não fazer nada
+                if (producaoData.status === STATUS_PRODUCAO.PRONTO) {
+                    console.log(`⚠️ Item ${item} já está marcado como PRONTO`);
+                    return Promise.reject('JA_PRONTO');
+                }
+                
+                // Obter a demanda atual para calcular quanto baixar do estoque
+                return db.ref('/salas').once('value');
+            }
+        })
+        .then((snapshot) => {
+            if (!snapshot) return;
+            
+            const salas = snapshot.val();
+            let totalAdultos = 0;
+            let totalCriancas = 0;
+            
+            if (salas) {
+                Object.values(salas).forEach(sala => {
+                    const pessoas = sala.pessoas || 0;
+                    if (sala.tipo === 'adulto') {
+                        totalAdultos += pessoas;
+                    } else if (sala.tipo === 'infantil') {
+                        totalCriancas += pessoas;
+                    }
+                });
+            }
+            
+            // Calcular demanda atual
+            const demanda = calcularDemanda(totalAdultos, totalCriancas, false);
+            
+            // Definir qual quantidade baixar do estoque
+            let quantidadeBaixar = 0;
+            if (item === 'cafe') {
+                quantidadeBaixar = demanda.cafe;
+            } else if (item === 'alimentoAdulto') {
+                quantidadeBaixar = demanda.alimentoAdulto;
+            } else if (item === 'alimentoInfantil') {
+                quantidadeBaixar = demanda.alimentoInfantil;
+            }
+            
+            // Realizar baixa automática do estoque
+            if (quantidadeBaixar > 0) {
+                return baixarEstoqueAutomatico(item, quantidadeBaixar);
+            }
+        })
+        .then(() => {
+            // Atualizar status para PRONTO
+            return atualizarStatusProducao(item, STATUS_PRODUCAO.PRONTO);
+        })
+        .catch((error) => {
+            if (error === 'JA_PRONTO') {
+                // Ignorar se já estava pronto
+                return;
+            }
+            console.error(`❌ Erro ao marcar ${item} como pronto:`, error);
+            alert('Erro ao marcar item como pronto');
+        });
 }
 
 /**
@@ -742,4 +807,207 @@ function atualizarDemandaUI(demanda) {
             alertaEspecial.classList.remove('ativo');
         }
     }
+}
+
+// ============================================
+// FUNÇÕES DE CONTROLE DE ESTOQUE - FASE 7
+// ============================================
+
+/**
+ * Inicializa a estrutura de estoque no Firebase se não existir
+ */
+function inicializarEstoque() {
+    const estoqueRef = db.ref('/estoque');
+    
+    estoqueRef.once('value')
+        .then((snapshot) => {
+            if (!snapshot.exists()) {
+                // Criar estrutura inicial
+                const estoqueInicial = {
+                    cafe: {
+                        nome: "Café",
+                        unidade: "litros",
+                        quantidadeAtual: 10,
+                        estoqueMinimo: 5
+                    },
+                    alimentoAdulto: {
+                        nome: "Alimento Adulto",
+                        unidade: "kg",
+                        quantidadeAtual: 15,
+                        estoqueMinimo: 5
+                    },
+                    alimentoInfantil: {
+                        nome: "Alimento Infantil",
+                        unidade: "kg",
+                        quantidadeAtual: 10,
+                        estoqueMinimo: 3
+                    }
+                };
+                
+                return estoqueRef.set(estoqueInicial);
+            }
+        })
+        .then(() => {
+            console.log("✅ Estrutura de estoque inicializada");
+        })
+        .catch((error) => {
+            console.error("❌ Erro ao inicializar estoque:", error);
+        });
+}
+
+/**
+ * Escuta mudanças no estoque em tempo real
+ * @param {Function} callback - Função a ser chamada quando houver mudanças
+ */
+function escutarEstoque(callback) {
+    const estoqueRef = db.ref('/estoque');
+    
+    estoqueRef.on('value', (snapshot) => {
+        if (snapshot.exists()) {
+            const estoque = snapshot.val();
+            console.log("🔄 Estoque atualizado:", estoque);
+            callback(estoque);
+        }
+    }, (error) => {
+        console.error("❌ Erro ao escutar estoque:", error);
+    });
+}
+
+/**
+ * Adiciona quantidade ao estoque (entrada manual)
+ * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
+ * @param {number} quantidade - Quantidade a adicionar
+ */
+function entradaEstoque(item, quantidade) {
+    const itemRef = db.ref(`/estoque/${item}`);
+    
+    itemRef.once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                const itemData = snapshot.val();
+                const novaQuantidade = itemData.quantidadeAtual + quantidade;
+                return itemRef.update({ quantidadeAtual: novaQuantidade });
+            }
+        })
+        .then(() => {
+            console.log(`✅ Entrada de estoque: +${quantidade} em ${item}`);
+        })
+        .catch((error) => {
+            console.error(`❌ Erro ao adicionar estoque de ${item}:`, error);
+        });
+}
+
+/**
+ * Remove quantidade do estoque (saída manual)
+ * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
+ * @param {number} quantidade - Quantidade a remover
+ */
+function saidaEstoque(item, quantidade) {
+    const itemRef = db.ref(`/estoque/${item}`);
+    
+    itemRef.once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                const itemData = snapshot.val();
+                const novaQuantidade = Math.max(0, itemData.quantidadeAtual - quantidade);
+                
+                if (itemData.quantidadeAtual === 0) {
+                    alert('Estoque já está zerado!');
+                    return;
+                }
+                
+                return itemRef.update({ quantidadeAtual: novaQuantidade });
+            }
+        })
+        .then(() => {
+            console.log(`✅ Saída de estoque: -${quantidade} em ${item}`);
+        })
+        .catch((error) => {
+            console.error(`❌ Erro ao remover estoque de ${item}:`, error);
+        });
+}
+
+/**
+ * Atualiza o estoque mínimo de um item
+ * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
+ * @param {number} novoMinimo - Novo valor de estoque mínimo
+ */
+function atualizarEstoqueMinimoFirebase(item, novoMinimo) {
+    const itemRef = db.ref(`/estoque/${item}`);
+    
+    itemRef.update({ estoqueMinimo: novoMinimo })
+        .then(() => {
+            console.log(`✅ Estoque mínimo de ${item} atualizado para ${novoMinimo}`);
+            alert('Estoque mínimo atualizado com sucesso!');
+        })
+        .catch((error) => {
+            console.error(`❌ Erro ao atualizar estoque mínimo de ${item}:`, error);
+            alert('Erro ao atualizar estoque mínimo');
+        });
+}
+
+/**
+ * Realiza baixa automática do estoque baseado na produção pronta
+ * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
+ * @param {number} quantidadeProduzida - Quantidade produzida a ser baixada
+ */
+function baixarEstoqueAutomatico(item, quantidadeProduzida) {
+    const itemRef = db.ref(`/estoque/${item}`);
+    
+    return itemRef.once('value')
+        .then((snapshot) => {
+            if (snapshot.exists()) {
+                const itemData = snapshot.val();
+                const novaQuantidade = Math.max(0, itemData.quantidadeAtual - quantidadeProduzida);
+                return itemRef.update({ quantidadeAtual: novaQuantidade });
+            }
+        })
+        .then(() => {
+            console.log(`✅ Baixa automática: -${quantidadeProduzida} em ${item}`);
+        })
+        .catch((error) => {
+            console.error(`❌ Erro ao baixar estoque de ${item}:`, error);
+            throw error;
+        });
+}
+
+/**
+ * Verifica se há estoque suficiente para produzir
+ * @param {Object} demanda - Objeto com cafe, alimentoAdulto, alimentoInfantil
+ * @returns {Promise<Object>} Objeto com {suficiente: boolean, faltantes: array}
+ */
+function verificarEstoqueSuficiente(demanda) {
+    const estoqueRef = db.ref('/estoque');
+    
+    return estoqueRef.once('value')
+        .then((snapshot) => {
+            if (!snapshot.exists()) {
+                return { suficiente: false, faltantes: ['Estoque não inicializado'] };
+            }
+            
+            const estoque = snapshot.val();
+            const faltantes = [];
+            
+            // Verificar cada item
+            if (demanda.cafe > 0 && estoque.cafe.quantidadeAtual < demanda.cafe) {
+                faltantes.push(`Café (necessário: ${formatarNumero(demanda.cafe)}L, disponível: ${formatarNumero(estoque.cafe.quantidadeAtual)}L)`);
+            }
+            
+            if (demanda.alimentoAdulto > 0 && estoque.alimentoAdulto.quantidadeAtual < demanda.alimentoAdulto) {
+                faltantes.push(`Alimento Adulto (necessário: ${formatarNumero(demanda.alimentoAdulto)}kg, disponível: ${formatarNumero(estoque.alimentoAdulto.quantidadeAtual)}kg)`);
+            }
+            
+            if (demanda.alimentoInfantil > 0 && estoque.alimentoInfantil.quantidadeAtual < demanda.alimentoInfantil) {
+                faltantes.push(`Alimento Infantil (necessário: ${formatarNumero(demanda.alimentoInfantil)}kg, disponível: ${formatarNumero(estoque.alimentoInfantil.quantidadeAtual)}kg)`);
+            }
+            
+            return {
+                suficiente: faltantes.length === 0,
+                faltantes: faltantes
+            };
+        })
+        .catch((error) => {
+            console.error("❌ Erro ao verificar estoque:", error);
+            return { suficiente: false, faltantes: ['Erro ao verificar estoque'] };
+        });
 }

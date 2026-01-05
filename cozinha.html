@@ -243,6 +243,101 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        
+        /* Estilos para Fase 7 - Estoque */
+        .estoque-section {
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #fff3e0;
+            border-radius: 8px;
+            border: 2px solid #FF9800;
+        }
+        
+        .estoque-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            background-color: white;
+            border-radius: 8px;
+            font-size: 1.4em;
+        }
+        
+        .estoque-item.alerta {
+            background-color: #ffebee;
+            border: 2px solid #f44336;
+        }
+        
+        .estoque-label {
+            font-weight: normal;
+            color: #333;
+        }
+        
+        .estoque-valor {
+            font-weight: bold;
+            color: #E65100;
+        }
+        
+        .estoque-valor.alerta {
+            color: #c62828;
+        }
+        
+        .alerta-estoque {
+            margin-top: 30px;
+            padding: 25px;
+            background-color: #ffebee;
+            border: 3px solid #f44336;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #c62828;
+            display: none;
+        }
+        
+        .alerta-estoque.ativo {
+            display: block;
+        }
+        
+        .alerta-estoque-lista {
+            margin-top: 15px;
+            text-align: left;
+            font-size: 0.9em;
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .alerta-estoque-lista li {
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .alerta-estoque-lista li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+        
+        .btn-estoque {
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            background-color: #FF9800;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-estoque:hover {
+            background-color: #F57C00;
+        }
     </style>
 </head>
 <body>
@@ -293,6 +388,33 @@
             <div id="alertaEspecial" class="alerta-especial">
                 ⭐ Sala especial ativa – priorizar
             </div>
+        </div>
+        
+        <!-- FASE 7: Estoque -->
+        <div class="estoque-section">
+            <h2>ESTOQUE ATUAL</h2>
+            <div class="estoque-item" id="estoqueCafeItem">
+                <span class="estoque-label">☕ Café:</span>
+                <span class="estoque-valor" id="estoqueCafe">-- L</span>
+            </div>
+            <div class="estoque-item" id="estoqueAlimentoAdultoItem">
+                <span class="estoque-label">🍰 Alimento adulto:</span>
+                <span class="estoque-valor" id="estoqueAlimentoAdulto">-- kg</span>
+            </div>
+            <div class="estoque-item" id="estoqueAlimentoInfantilItem">
+                <span class="estoque-label">🧁 Alimento infantil:</span>
+                <span class="estoque-valor" id="estoqueAlimentoInfantil">-- kg</span>
+            </div>
+            
+            <div id="alertaEstoque" class="alerta-estoque">
+                🚨 ESTOQUE INSUFICIENTE
+                <ul id="alertaEstoqueLista" class="alerta-estoque-lista">
+                </ul>
+            </div>
+            
+            <a href="estoque.html" class="btn-estoque">
+                📦 GERENCIAR ESTOQUE
+            </a>
         </div>
         
         <!-- FASE 6: Status de Produção -->
@@ -353,7 +475,7 @@
     <script>
         // Inicializar dashboard da cozinha quando a página carregar
         document.addEventListener('DOMContentLoaded', function() {
-            console.log("🚀 Dashboard da Cozinha iniciado - Fase 6");
+            console.log("🚀 Dashboard da Cozinha iniciado - Fase 7");
             
             // Verificar se Firebase está configurado antes de continuar
             if (!db) {
@@ -366,11 +488,17 @@
             // Inicializar estrutura de produção (Fase 6)
             inicializarProducao();
             
+            // Inicializar estrutura de estoque (Fase 7)
+            inicializarEstoque();
+            
             // Inicializar dashboard
             iniciarDashboardCozinha();
             
             // Escutar mudanças no status de produção (Fase 6)
             escutarStatusProducao(atualizarUIStatusProducao);
+            
+            // Escutar mudanças no estoque (Fase 7)
+            escutarEstoque(atualizarUIEstoque);
         });
         
         /**
@@ -409,6 +537,65 @@
                 // Desabilitar botão se já estiver pronto
                 document.getElementById('btnProntoAlimentoInfantil').disabled = (producao.alimentoInfantil.status === STATUS_PRODUCAO.PRONTO);
             }
+        }
+        
+        /**
+         * Atualiza a interface com o estoque atual (Fase 7)
+         */
+        function atualizarUIEstoque(estoque) {
+            if (!estoque) return;
+            
+            // Obter demanda atual
+            const totalAdultosElem = document.getElementById('totalAdultos');
+            const totalCriancasElem = document.getElementById('totalCriancas');
+            
+            const totalAdultos = parseInt(totalAdultosElem.textContent) || 0;
+            const totalCriancas = parseInt(totalCriancasElem.textContent) || 0;
+            
+            const demanda = calcularDemanda(totalAdultos, totalCriancas, false);
+            
+            // Atualizar café
+            if (estoque.cafe) {
+                const cafeSuficiente = estoque.cafe.quantidadeAtual >= demanda.cafe;
+                const cafeEmAlerta = estoque.cafe.quantidadeAtual <= estoque.cafe.estoqueMinimo;
+                
+                document.getElementById('estoqueCafe').textContent = `${formatarNumero(estoque.cafe.quantidadeAtual)} L`;
+                document.getElementById('estoqueCafe').className = `estoque-valor${cafeEmAlerta ? ' alerta' : ''}`;
+                document.getElementById('estoqueCafeItem').className = `estoque-item${cafeEmAlerta ? ' alerta' : ''}`;
+            }
+            
+            // Atualizar alimento adulto
+            if (estoque.alimentoAdulto) {
+                const adultoSuficiente = estoque.alimentoAdulto.quantidadeAtual >= demanda.alimentoAdulto;
+                const adultoEmAlerta = estoque.alimentoAdulto.quantidadeAtual <= estoque.alimentoAdulto.estoqueMinimo;
+                
+                document.getElementById('estoqueAlimentoAdulto').textContent = `${formatarNumero(estoque.alimentoAdulto.quantidadeAtual)} kg`;
+                document.getElementById('estoqueAlimentoAdulto').className = `estoque-valor${adultoEmAlerta ? ' alerta' : ''}`;
+                document.getElementById('estoqueAlimentoAdultoItem').className = `estoque-item${adultoEmAlerta ? ' alerta' : ''}`;
+            }
+            
+            // Atualizar alimento infantil
+            if (estoque.alimentoInfantil) {
+                const infantilSuficiente = estoque.alimentoInfantil.quantidadeAtual >= demanda.alimentoInfantil;
+                const infantilEmAlerta = estoque.alimentoInfantil.quantidadeAtual <= estoque.alimentoInfantil.estoqueMinimo;
+                
+                document.getElementById('estoqueAlimentoInfantil').textContent = `${formatarNumero(estoque.alimentoInfantil.quantidadeAtual)} kg`;
+                document.getElementById('estoqueAlimentoInfantil').className = `estoque-valor${infantilEmAlerta ? ' alerta' : ''}`;
+                document.getElementById('estoqueAlimentoInfantilItem').className = `estoque-item${infantilEmAlerta ? ' alerta' : ''}`;
+            }
+            
+            // Verificar e exibir alertas de estoque insuficiente
+            verificarEstoqueSuficiente(demanda).then(resultado => {
+                const alertaEstoque = document.getElementById('alertaEstoque');
+                const alertaEstoqueLista = document.getElementById('alertaEstoqueLista');
+                
+                if (!resultado.suficiente && resultado.faltantes.length > 0) {
+                    alertaEstoque.classList.add('ativo');
+                    alertaEstoqueLista.innerHTML = resultado.faltantes.map(f => `<li>${f}</li>`).join('');
+                } else {
+                    alertaEstoque.classList.remove('ativo');
+                }
+            });
         }
     </script>
 </body>
