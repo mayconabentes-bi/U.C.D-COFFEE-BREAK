@@ -11,13 +11,13 @@
  * 4. Role até "Seus apps" e copie a configuração
  */
 const firebaseConfig = {
-    apiKey: "SEU_API_KEY_AQUI",
-    authDomain: "seu-projeto.firebaseapp.com",
-    databaseURL: "https://seu-projeto-default-rtdb.firebaseio.com",
-    projectId: "seu-projeto",
-    storageBucket: "seu-projeto.appspot.com",
-    messagingSenderId: "123456789",
-    appId: "1:123456789:web:abc123"
+    apiKey: "AIzaSyCaBcq1p14qzXfx53ZKzxCcWQEehcC7gRo",
+    authDomain: "sistema-cozinha-igreja.firebaseapp.com",
+    databaseURL: "https://sistema-cozinha-igreja-default-rtdb.firebaseio.com",
+    projectId: "sistema-cozinha-igreja",
+    storageBucket: "sistema-cozinha-igreja.firebasestorage.app",
+    messagingSenderId: "573871776810",
+    appId: "1:573871776810:web:db2a892693f77183814f53"
 };
 
 /**
