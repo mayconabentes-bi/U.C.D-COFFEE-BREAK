@@ -19,13 +19,14 @@
  * - O arquivo firebase-config.js está no .gitignore para ajudar com isso
  */
 const firebaseConfig = {
-    apiKey: "AIzaSyCaBcq1p14qzXfx53ZKzxCcWQEehcC7gRo",
-    authDomain: "sistema-cozinha-igreja.firebaseapp.com",
-    databaseURL: "https://sistema-cozinha-igreja-default-rtdb.firebaseio.com",
-    projectId: "sistema-cozinha-igreja",
-    storageBucket: "sistema-cozinha-igreja.firebasestorage.app",
-    messagingSenderId: "573871776810",
-    appId: "1:573871776810:web:db2a892693f77183814f53"
+  apiKey: "AIzaSyCaBcq1p14qzXfx53ZKzxCcWQEehcC7gRo",
+  authDomain: "sistema-cozinha-igreja.firebaseapp.com",
+  databaseURL: "https://sistema-cozinha-igreja-default-rtdb.firebaseio.com",
+  projectId: "sistema-cozinha-igreja",
+  storageBucket: "sistema-cozinha-igreja.firebasestorage.app",
+  messagingSenderId: "573871776810",
+  appId: "1:573871776810:web:db2a892693f77183814f53",
+  measurementId: "G-VYYEL4VK49"
 };
 
 /**
