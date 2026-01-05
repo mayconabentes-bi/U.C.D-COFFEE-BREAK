@@ -32,3 +32,6 @@ package-lock.json
 # Environment files (if used in future)
 .env
 .env.local
+
+# Firebase configuration (contains sensitive data)
+firebase-config.js

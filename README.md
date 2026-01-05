@@ -2,6 +2,22 @@
 
 Sistema simples e leve de gerenciamento para igrejas, hospedado no GitHub Pages e usando Firebase Realtime Database.
 
+## ⚠️ ATENÇÃO: Configuração Necessária
+
+**Antes de usar o sistema, você DEVE configurar suas credenciais do Firebase!**
+
+Este repositório contém código de exemplo com valores placeholder. Para o sistema funcionar, você precisa:
+
+1. Criar um projeto no [Firebase Console](https://console.firebase.google.com)
+2. Editar o arquivo `firebase.js` com suas credenciais reais
+3. Veja a seção [🚀 Como Usar](#-como-usar) abaixo para instruções detalhadas
+
+**Sem essa configuração, você verá o seguinte erro:**
+```
+Firebase error. Please ensure that you have the URL of your Firebase 
+Realtime Database instance configured correctly.
+```
+
 ## 🎯 Sobre o Projeto
 
 O **U.C.D Coffee Break** é uma solução de baixo custo para gerenciamento de eventos e recursos em igrejas. O sistema está sendo desenvolvido em fases, começando pela fundação técnica até chegar a um sistema completo de gestão.
@@ -228,16 +244,62 @@ Essas funcionalidades serão implementadas nas próximas fases (Fase 7).
 
 ### Pré-requisitos
 
-1. **Conta no Firebase**
-   - Acesse [Firebase Console](https://console.firebase.google.com)
-   - Crie um novo projeto
-   - Ative o Realtime Database
-   - Configure as regras do banco (para testes, pode usar modo público temporariamente)
+#### 1. Criar Projeto no Firebase
 
-2. **Configurar Firebase**
-   - Abra o arquivo `firebase.js`
-   - Substitua os valores de `firebaseConfig` pelas configurações do seu projeto Firebase
-   - Para obter essas informações, vá em: Configurações do Projeto > Seus apps > Configuração do SDK
+1. Acesse [Firebase Console](https://console.firebase.google.com)
+2. Clique em "Adicionar projeto"
+3. Dê um nome ao projeto (exemplo: "minha-igreja-coffee")
+4. Siga o assistente até concluir a criação
+
+#### 2. Ativar o Realtime Database
+
+1. No console do Firebase, vá em "Realtime Database" no menu lateral
+2. Clique em "Criar banco de dados"
+3. Escolha a localização (recomendado: mais próxima do Brasil)
+4. Escolha "Iniciar no modo de teste" (para desenvolvimento)
+   
+   ⚠️ **IMPORTANTE:** As regras de teste permitem acesso público por 30 dias. 
+   Para produção, configure regras de segurança adequadas!
+
+#### 3. **PASSO CRÍTICO:** Configurar o arquivo firebase.js
+
+Este é o passo mais importante! Sem ele, o sistema não funcionará.
+
+1. **Obter suas credenciais:**
+   - No Firebase Console, clique no ícone de engrenagem ⚙️ (Configurações do projeto)
+   - Role até a seção "Seus apps"
+   - Se não houver nenhum app, clique em "Adicionar app" e escolha "Web" (ícone `</>`)
+   - Copie o objeto `firebaseConfig` que aparece
+
+2. **Editar o arquivo firebase.js:**
+   - Abra o arquivo `firebase.js` na raiz do projeto
+   - Localize as linhas 20-27 (o objeto `firebaseConfig`)
+   - Substitua TODOS os valores placeholder pelos valores reais que você copiou:
+   
+   ```javascript
+   // ❌ ANTES (valores placeholder - NÃO funcionam)
+   const firebaseConfig = {
+       apiKey: "SEU_API_KEY_AQUI",
+       authDomain: "seu-projeto.firebaseapp.com",
+       databaseURL: "https://seu-projeto-default-rtdb.firebaseio.com",
+       // ...
+   };
+   
+   // ✅ DEPOIS (valores reais do seu projeto)
+   const firebaseConfig = {
+       apiKey: "AIzaSyD1234567890abcdefghijklmnop",
+       authDomain: "minha-igreja-coffee.firebaseapp.com",
+       databaseURL: "https://minha-igreja-coffee-default-rtdb.firebaseio.com",
+       // ...
+   };
+   ```
+
+3. **Salve o arquivo**
+
+⚠️ **NOTA DE SEGURANÇA:** 
+- Se você vai fazer um fork público deste repositório, NUNCA faça commit das suas credenciais reais
+- Considere usar variáveis de ambiente ou um arquivo de configuração local
+- O arquivo `firebase-config.js` está no `.gitignore` para ajudar com isso
 
 ### Uso Local
 
