@@ -273,7 +273,7 @@ Este é o passo mais importante! Sem ele, o sistema não funcionará.
 
 2. **Editar o arquivo firebase.js:**
    - Abra o arquivo `firebase.js` na raiz do projeto
-   - Localize as linhas 20-27 (o objeto `firebaseConfig`)
+   - Localize as linhas 21-28 (o objeto `firebaseConfig`)
    - Substitua TODOS os valores placeholder pelos valores reais que você copiou:
    
    ```javascript
