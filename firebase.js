@@ -32,7 +32,7 @@ const firebaseConfig = {
  * Valida se a configuração parece ser real (não é placeholder)
  */
 function validarConfiguracao(config) {
-    const placeholders = ['SEU_API_KEY_AQUI', 'seu-projeto'];
+    const placeholders = ['AIzaSyCaBcq1p14qzXfx53ZKzxCcWQEehcC7gRo', 'seu-projetosistema-cozinha-igreja'];
     const valores = Object.values(config).join(' ');
     
     for (const placeholder of placeholders) {
