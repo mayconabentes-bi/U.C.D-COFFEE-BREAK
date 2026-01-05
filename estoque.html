@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U.C.D Coffee Break - Controle de Estoque</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #2196F3;
+            font-size: 2em;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #2196F3;
+            padding-bottom: 10px;
+        }
+        .item-estoque {
+            padding: 25px;
+            margin-bottom: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            border-left: 5px solid #4CAF50;
+        }
+        .item-estoque.alerta {
+            border-left-color: #f44336;
+            background-color: #ffebee;
+        }
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .item-nome {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #333;
+        }
+        .item-nome .emoji {
+            font-size: 1.2em;
+            margin-right: 10px;
+        }
+        .alerta-badge {
+            padding: 8px 15px;
+            background-color: #f44336;
+            color: white;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1em;
+            display: none;
+        }
+        .alerta-badge.ativo {
+            display: block;
+        }
+        .item-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            padding: 15px;
+            background-color: white;
+            border-radius: 6px;
+            border: 2px solid #ddd;
+        }
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .info-valor {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2196F3;
+        }
+        .info-unidade {
+            font-size: 1.2em;
+            color: #666;
+            margin-left: 5px;
+        }
+        .controles {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        .controle-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .controle-label {
+            font-size: 0.95em;
+            font-weight: bold;
+            color: #555;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex: 1;
+        }
+        .btn-adicionar {
+            background-color: #4CAF50;
+        }
+        .btn-adicionar:hover {
+            background-color: #45a049;
+        }
+        .btn-remover {
+            background-color: #f44336;
+        }
+        .btn-remover:hover {
+            background-color: #da190b;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1em;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .btn-salvar {
+            background-color: #2196F3;
+        }
+        .btn-salvar:hover {
+            background-color: #1976D2;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 1.3em;
+            padding: 40px;
+        }
+        .alertas-resumo {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #ffebee;
+            border: 3px solid #f44336;
+            border-radius: 8px;
+            display: none;
+        }
+        .alertas-resumo.ativo {
+            display: block;
+        }
+        .alertas-resumo h3 {
+            margin-top: 0;
+            color: #c62828;
+            font-size: 1.5em;
+        }
+        .alertas-lista {
+            margin: 10px 0 0 0;
+            padding-left: 25px;
+        }
+        .alertas-lista li {
+            margin-bottom: 8px;
+            font-size: 1.1em;
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>📦 Controle de Estoque</h1>
+    <div class="subtitle">Gestão de Insumos</div>
+    
+    <div class="container">
+        <!-- Resumo de Alertas -->
+        <div id="alertasResumo" class="alertas-resumo">
+            <h3>⚠️ ATENÇÃO: Estoque Baixo</h3>
+            <ul id="alertasLista" class="alertas-lista">
+            </ul>
+        </div>
+        
+        <h2>ITENS DO ESTOQUE</h2>
+        
+        <div id="listaEstoque" class="loading">
+            Carregando estoque...
+        </div>
+    </div>
+
+    <!-- Carregamento do Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Scripts do projeto -->
+    <script src="firebase.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Inicializar página de estoque
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log("🚀 Controle de Estoque iniciado - Fase 7");
+            
+            // Verificar se Firebase está configurado
+            if (!db) {
+                console.error("❌ Firebase não está inicializado. Configure o arquivo firebase.js primeiro.");
+                document.getElementById('listaEstoque').innerHTML = 
+                    '<div class="loading">Erro: Firebase não configurado. Verifique o arquivo firebase.js</div>';
+                return;
+            }
+            
+            // Inicializar estrutura de estoque
+            inicializarEstoque();
+            
+            // Escutar mudanças no estoque
+            escutarEstoque(atualizarUIEstoque);
+        });
+        
+        /**
+         * Atualiza a interface com os dados do estoque
+         */
+        function atualizarUIEstoque(estoque) {
+            const container = document.getElementById('listaEstoque');
+            container.innerHTML = '';
+            
+            if (!estoque) {
+                container.innerHTML = '<div class="loading">Nenhum item no estoque</div>';
+                return;
+            }
+            
+            const itensConfig = [
+                { key: 'cafe', nome: 'Café', emoji: '☕', unidade: 'litros' },
+                { key: 'alimentoAdulto', nome: 'Alimento Adulto', emoji: '🍰', unidade: 'kg' },
+                { key: 'alimentoInfantil', nome: 'Alimento Infantil', emoji: '🧁', unidade: 'kg' }
+            ];
+            
+            const alertas = [];
+            
+            itensConfig.forEach(config => {
+                const item = estoque[config.key];
+                if (!item) return;
+                
+                const temAlerta = item.quantidadeAtual <= item.estoqueMinimo;
+                if (temAlerta) {
+                    alertas.push(`${config.emoji} ${config.nome}: ${formatarNumero(item.quantidadeAtual)} ${item.unidade} (mínimo: ${formatarNumero(item.estoqueMinimo)})`);
+                }
+                
+                const div = document.createElement('div');
+                div.className = `item-estoque${temAlerta ? ' alerta' : ''}`;
+                
+                div.innerHTML = `
+                    <div class="item-header">
+                        <div class="item-nome">
+                            <span class="emoji">${config.emoji}</span>
+                            ${config.nome}
+                        </div>
+                        <div class="alerta-badge ${temAlerta ? 'ativo' : ''}">
+                            ⚠️ ESTOQUE BAIXO
+                        </div>
+                    </div>
+                    
+                    <div class="item-info">
+                        <div class="info-box">
+                            <div class="info-label">Quantidade Atual</div>
+                            <div>
+                                <span class="info-valor">${formatarNumero(item.quantidadeAtual)}</span>
+                                <span class="info-unidade">${item.unidade}</span>
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Estoque Mínimo</div>
+                            <div>
+                                <span class="info-valor">${formatarNumero(item.estoqueMinimo)}</span>
+                                <span class="info-unidade">${item.unidade}</span>
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-label">Status</div>
+                            <div>
+                                <span class="info-valor" style="color: ${temAlerta ? '#f44336' : '#4CAF50'}">
+                                    ${temAlerta ? '⚠️' : '✓'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="controles">
+                        <div class="controle-group">
+                            <div class="controle-label">Entrada/Saída Manual</div>
+                            <div class="btn-group">
+                                <button class="btn-adicionar" onclick="entradaEstoque('${config.key}', 1)">
+                                    + 1
+                                </button>
+                                <button class="btn-remover" onclick="saidaEstoque('${config.key}', 1)">
+                                    - 1
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="controle-group">
+                            <div class="controle-label">Entrada Rápida</div>
+                            <div class="btn-group">
+                                <button class="btn-adicionar" onclick="entradaEstoque('${config.key}', 5)">
+                                    + 5
+                                </button>
+                                <button class="btn-adicionar" onclick="entradaEstoque('${config.key}', 10)">
+                                    + 10
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="controle-group">
+                            <div class="controle-label">Ajustar Estoque Mínimo</div>
+                            <input type="number" 
+                                   id="minimo_${config.key}" 
+                                   min="0" 
+                                   step="0.5" 
+                                   value="${item.estoqueMinimo}"
+                                   style="margin-bottom: 5px;">
+                            <button class="btn-salvar" onclick="atualizarEstoqueMinimo('${config.key}')">
+                                Salvar
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(div);
+            });
+            
+            // Atualizar resumo de alertas
+            const alertasResumo = document.getElementById('alertasResumo');
+            const alertasLista = document.getElementById('alertasLista');
+            
+            if (alertas.length > 0) {
+                alertasResumo.classList.add('ativo');
+                alertasLista.innerHTML = alertas.map(a => `<li>${a}</li>`).join('');
+            } else {
+                alertasResumo.classList.remove('ativo');
+            }
+        }
+        
+        /**
+         * Atualiza o estoque mínimo de um item
+         */
+        function atualizarEstoqueMinimo(itemKey) {
+            const inputId = `minimo_${itemKey}`;
+            const novoMinimo = parseFloat(document.getElementById(inputId).value);
+            
+            if (isNaN(novoMinimo) || novoMinimo < 0) {
+                alert('Por favor, informe um valor válido para o estoque mínimo');
+                return;
+            }
+            
+            atualizarEstoqueMinimoFirebase(itemKey, novoMinimo);
+        }
+    </script>
+</body>
+</html>
