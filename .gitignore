@@ -1,0 +1,37 @@
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+/tmp/
+*.tmp
+*.log
+
+# Firebase emulator data
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
+# Node modules (if used in future)
+node_modules/
+package-lock.json
+
+# Environment files (if used in future)
+.env
+.env.local
+
+# Firebase configuration (contains sensitive data)
+firebase-config.js

@@ -6,6 +6,12 @@
  * Escreve dados simples no caminho /teste para verificar conectividade
  */
 function testarConexaoFirebase() {
+    // Verificar se db está disponível
+    if (!db) {
+        console.error("❌ Firebase não está inicializado. Configure o arquivo firebase.js primeiro.");
+        return;
+    }
+    
     // Dados de teste
     const dadosTeste = {
         status: "ok",
@@ -27,6 +33,14 @@ function testarConexaoFirebase() {
  */
 document.addEventListener('DOMContentLoaded', function() {
     console.log("🚀 Aplicação iniciada - Fase 2");
+    
+    // Verificar se Firebase está configurado antes de continuar
+    if (!db) {
+        console.error("❌ APLICAÇÃO NÃO PODE INICIAR: Firebase não configurado!");
+        console.error("   Por favor, configure o arquivo firebase.js com suas credenciais.");
+        console.error("   Veja o README.md para instruções detalhadas.");
+        return; // Não continuar a inicialização
+    }
     
     // Testar conexão com Firebase
     testarConexaoFirebase();
@@ -414,7 +428,7 @@ const STATUS_PRODUCAO = {
  * Inicializa a estrutura de produção no Firebase se não existir
  */
 function inicializarProducao() {
-    const producaoRef = database.ref('/producao');
+    const producaoRef = db.ref('/producao');
     
     producaoRef.once('value')
         .then((snapshot) => {
@@ -452,7 +466,7 @@ function inicializarProducao() {
  * @param {string} novoStatus - Novo status do item
  */
 function atualizarStatusProducao(item, novoStatus) {
-    const producaoRef = database.ref(`/producao/${item}`);
+    const producaoRef = db.ref(`/producao/${item}`);
     
     const update = {
         status: novoStatus,
@@ -489,7 +503,7 @@ function resetarStatusProducao(item) {
  * @param {Function} callback - Função a ser chamada quando houver mudanças
  */
 function escutarStatusProducao(callback) {
-    const producaoRef = database.ref('/producao');
+    const producaoRef = db.ref('/producao');
     
     producaoRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
@@ -538,15 +552,12 @@ function getTextoStatus(status) {
     }
 }
 
-// Variável para armazenar demanda anterior e detectar mudanças
-let demandaAnterior = { cafe: 0, alimentoAdulto: 0, alimentoInfantil: 0 };
-
 /**
  * Verifica se a demanda mudou e reseta status se necessário
  * @param {Object} demandaAtual - Demanda atual calculada
  */
 function verificarMudancaDemanda(demandaAtual) {
-    const producaoRef = database.ref('/producao');
+    const producaoRef = db.ref('/producao');
     
     // Verificar se houve aumento na demanda
     const aumentouCafe = demandaAtual.cafe > estadoProducao.demandaAnterior.cafe;
@@ -586,7 +597,7 @@ function verificarMudancaDemanda(demandaAtual) {
                     }
                     
                     if (Object.keys(updates).length > 0) {
-                        return database.ref().update(updates);
+                        return db.ref().update(updates);
                     }
                 }
             })
