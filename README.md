@@ -309,7 +309,12 @@ Este é o passo mais importante! Sem ele, o sistema não funcionará.
    cd U.C.D-COFFEE-BREAK
    ```
 
-2. Abra os arquivos HTML no navegador:
+2. Configure o git para usar merge ao invés de rebase (recomendado):
+   ```bash
+   git config pull.rebase false
+   ```
+
+3. Abra os arquivos HTML no navegador:
    - **index.html** - Para configuração de salas
    - **cozinha.html** - Para visualização do dashboard da cozinha
    - **sala.html** - Para check-in de voluntários e visualização do status de produção
@@ -321,7 +326,7 @@ Este é o passo mais importante! Sem ele, o sistema não funcionará.
    npx serve
    ```
 
-3. Abra o **Console do Navegador** (F12):
+4. Abra o **Console do Navegador** (F12):
    - Você verá logs indicando a conexão com Firebase
    - Verificará se o teste de escrita foi bem-sucedido
 
