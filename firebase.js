@@ -47,7 +47,7 @@ function validarConfiguracao(config) {
  * Inicializa o Firebase com a configuração fornecida
  */
 let app;
-let db;
+let db = null; // Inicializa como null para evitar erros se a inicialização falhar
 try {
     // Validar se a configuração foi atualizada
     if (!validarConfiguracao(firebaseConfig)) {
@@ -83,16 +83,25 @@ try {
 } catch (error) {
     console.error("❌ Erro ao inicializar Firebase:", error.message);
     
+    // Função para criar o alerta visual
+    function criarAlertaVisual() {
+        const alerta = document.createElement('div');
+        alerta.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f44336;color:white;padding:15px;text-align:center;z-index:9999;font-family:Arial,sans-serif;';
+        alerta.innerHTML = '<strong>⚠️ FIREBASE NÃO CONFIGURADO</strong><br>' +
+                          'Configure o arquivo <code>firebase.js</code> com suas credenciais do Firebase. ' +
+                          'Veja o console (F12) e o README.md para instruções detalhadas.';
+        document.body.insertBefore(alerta, document.body.firstChild);
+    }
+    
     // Mostrar alerta visual para o usuário
     if (typeof document !== 'undefined') {
-        document.addEventListener('DOMContentLoaded', function() {
-            const alerta = document.createElement('div');
-            alerta.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#f44336;color:white;padding:15px;text-align:center;z-index:9999;font-family:Arial,sans-serif;';
-            alerta.innerHTML = '<strong>⚠️ FIREBASE NÃO CONFIGURADO</strong><br>' +
-                              'Configure o arquivo <code>firebase.js</code> com suas credenciais do Firebase. ' +
-                              'Veja o console (F12) e o README.md para instruções detalhadas.';
-            document.body.insertBefore(alerta, document.body.firstChild);
-        });
+        if (document.readyState === 'loading') {
+            // DOM ainda carregando, aguardar DOMContentLoaded
+            document.addEventListener('DOMContentLoaded', criarAlertaVisual);
+        } else {
+            // DOM já carregado, criar alerta imediatamente
+            criarAlertaVisual();
+        }
     }
 }
 
