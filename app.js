@@ -6,6 +6,12 @@
  * Escreve dados simples no caminho /teste para verificar conectividade
  */
 function testarConexaoFirebase() {
+    // Verificar se db está disponível
+    if (!db) {
+        console.error("❌ Firebase não está inicializado. Configure o arquivo firebase.js primeiro.");
+        return;
+    }
+    
     // Dados de teste
     const dadosTeste = {
         status: "ok",
@@ -27,6 +33,14 @@ function testarConexaoFirebase() {
  */
 document.addEventListener('DOMContentLoaded', function() {
     console.log("🚀 Aplicação iniciada - Fase 2");
+    
+    // Verificar se Firebase está configurado antes de continuar
+    if (!db) {
+        console.error("❌ APLICAÇÃO NÃO PODE INICIAR: Firebase não configurado!");
+        console.error("   Por favor, configure o arquivo firebase.js com suas credenciais.");
+        console.error("   Veja o README.md para instruções detalhadas.");
+        return; // Não continuar a inicialização
+    }
     
     // Testar conexão com Firebase
     testarConexaoFirebase();
