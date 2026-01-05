@@ -6,23 +6,17 @@
  * Escreve dados simples no caminho /teste para verificar conectividade
  */
 function testarConexaoFirebase() {
-    // Verificar se db está disponível
     if (!db) {
         console.error("❌ Firebase não está inicializado. Configure o arquivo firebase.js primeiro.");
         return;
     }
     
-    // Dados de teste
     const dadosTeste = {
         status: "ok",
         timestamp: new Date().toISOString()
     };
     
-    // Escrever no Firebase
     db.ref('/teste').set(dadosTeste)
-        .then(() => {
-            console.log("✅ SUCESSO! Conexão com Firebase confirmada. Dados gravados em /teste");
-        })
         .catch((error) => {
             console.error("❌ ERRO ao testar conexão:", error);
         });
@@ -32,23 +26,14 @@ function testarConexaoFirebase() {
  * Aguarda o carregamento completo do DOM antes de executar
  */
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("🚀 Aplicação iniciada - Fase 2");
-    
-    // Verificar se Firebase está configurado antes de continuar
     if (!db) {
-        console.error("❌ APLICAÇÃO NÃO PODE INICIAR: Firebase não configurado!");
-        console.error("   Por favor, configure o arquivo firebase.js com suas credenciais.");
-        console.error("   Veja o README.md para instruções detalhadas.");
-        return; // Não continuar a inicialização
+        console.error("❌ Firebase não configurado! Configure firebase.js - veja README.md");
+        return;
     }
     
-    // Testar conexão com Firebase
     testarConexaoFirebase();
-    
-    // Carregar dados existentes do Firebase
     carregarDadosFirebase();
     
-    // Configurar evento do botão criar salas
     const btnCriarSalas = document.getElementById('btnCriarSalas');
     if (btnCriarSalas) {
         btnCriarSalas.addEventListener('click', criarSalas);
@@ -62,26 +47,18 @@ function carregarDadosFirebase() {
     const configRef = db.ref('/configuracao');
     const salasRef = db.ref('/salas');
     
-    // Carregar configuração
     configRef.once('value')
         .then((snapshot) => {
             if (snapshot.exists()) {
                 const config = snapshot.val();
-                console.log("✅ Configuração carregada:", config);
-                
-                // Preencher campos do formulário
                 document.getElementById('qtdAdulto').value = config.salasAdulto || 0;
                 document.getElementById('qtdCrianca').value = config.salasCrianca || 0;
-                
-                // Carregar salas
                 return salasRef.once('value');
             }
         })
         .then((snapshot) => {
             if (snapshot && snapshot.exists()) {
-                const salas = snapshot.val();
-                console.log("✅ Salas carregadas:", salas);
-                exibirSalas(salas);
+                exibirSalas(snapshot.val());
             }
         })
         .catch((error) => {
@@ -101,14 +78,10 @@ function criarSalas() {
         return;
     }
     
-    console.log(`📝 Criando ${qtdAdulto} salas adulto e ${qtdCrianca} salas criança...`);
-    
     const salas = {};
     
-    // Gerar salas adulto
     for (let i = 1; i <= qtdAdulto; i++) {
-        const id = `adulto_${i}`;
-        salas[id] = {
+        salas[`adulto_${i}`] = {
             nome: `Sala Adulto ${i}`,
             tipo: "adulto",
             especial: false,
@@ -116,10 +89,8 @@ function criarSalas() {
         };
     }
     
-    // Gerar salas infantil
     for (let i = 1; i <= qtdCrianca; i++) {
-        const id = `infantil_${i}`;
-        salas[id] = {
+        salas[`infantil_${i}`] = {
             nome: `Sala Infantil ${i}`,
             tipo: "infantil",
             especial: false,
@@ -127,7 +98,6 @@ function criarSalas() {
         };
     }
     
-    // Salvar no Firebase
     salvarNoFirebase(qtdAdulto, qtdCrianca, salas);
 }
 
@@ -141,17 +111,9 @@ function salvarNoFirebase(qtdAdulto, qtdCrianca, salas) {
         salaEspecialId: ""
     };
     
-    // Salvar configuração
     db.ref('/configuracao').set(configuracao)
-        .then(() => {
-            console.log("✅ Configuração salva no Firebase");
-            // Salvar salas
-            return db.ref('/salas').set(salas);
-        })
-        .then(() => {
-            console.log("✅ Salas salvas no Firebase");
-            exibirSalas(salas);
-        })
+        .then(() => db.ref('/salas').set(salas))
+        .then(() => exibirSalas(salas))
         .catch((error) => {
             console.error("❌ Erro ao salvar no Firebase:", error);
             alert("Erro ao salvar dados. Verifique o console.");
@@ -211,48 +173,34 @@ function exibirSalas(salas) {
 
 /**
  * Marca uma sala como especial e desmarca as demais
- * Se isChecked for false, remove a sala especial
  */
 function marcarSalaEspecial(salaId, isChecked) {
     const salasRef = db.ref('/salas');
     const configRef = db.ref('/configuracao');
     
-    // Primeiro, carregar todas as salas
     salasRef.once('value')
         .then((snapshot) => {
             const salas = snapshot.val();
             
-            // Atualizar todas as salas
             if (isChecked) {
-                // Marcar apenas a selecionada como especial
                 for (const id in salas) {
                     salas[id].especial = (id === salaId);
                 }
             } else {
-                // Desmarcar a sala especial
                 if (salas[salaId]) {
                     salas[salaId].especial = false;
                 }
             }
             
-            // Determinar qual sala é especial agora
             const salaEspecialId = isChecked ? salaId : "";
             
-            // Salvar salas atualizadas
             return Promise.all([
                 salasRef.set(salas),
                 configRef.update({ salaEspecialId: salaEspecialId })
             ]);
         })
-        .then(() => {
-            console.log(`✅ Sala ${salaId} ${isChecked ? 'marcada' : 'desmarcada'} como especial`);
-            // Recarregar salas para atualizar interface
-            return salasRef.once('value');
-        })
-        .then((snapshot) => {
-            const salas = snapshot.val();
-            exibirSalas(salas);
-        })
+        .then(() => salasRef.once('value'))
+        .then((snapshot) => exibirSalas(snapshot.val()))
         .catch((error) => {
             console.error("❌ Erro ao marcar sala especial:", error);
         });
@@ -267,32 +215,23 @@ function marcarSalaEspecial(salaId, isChecked) {
  * Configura listener em tempo real para mudanças nas salas
  */
 function iniciarDashboardCozinha() {
-    // Verificar se Firebase está disponível
     if (!db) {
-        console.error("❌ Firebase não está inicializado ao iniciar dashboard.");
+        console.error("❌ Firebase não configurado");
         document.getElementById('listaSalas').innerHTML = 
             '<div class="empty-message">Erro: Firebase não configurado</div>';
         return;
     }
     
-    console.log("📊 Iniciando listener em tempo real para salas...");
     const salasRef = db.ref('/salas');
     
-    // Listener em tempo real - onValue dispara sempre que há mudanças
     salasRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
-            const salas = snapshot.val();
-            console.log("🔄 Atualização em tempo real:", Object.keys(salas).length, "salas encontradas");
-            exibirDashboardCozinha(salas);
+            exibirDashboardCozinha(snapshot.val());
         } else {
-            // Nenhuma sala criada ainda
-            console.log("⚠️ Nenhuma sala encontrada no Firebase");
             document.getElementById('listaSalas').innerHTML = 
                 '<div class="empty-message">Nenhuma sala criada ainda.</div>';
             atualizarTotais(0, 0);
-            // Atualizar demanda para zero
-            const demanda = calcularDemanda(0, 0, false);
-            atualizarDemandaUI(demanda);
+            atualizarDemandaUI(calcularDemanda(0, 0, false));
         }
     }, (error) => {
         console.error("❌ Erro ao escutar salas:", error);
@@ -305,31 +244,22 @@ function iniciarDashboardCozinha() {
  * Exibe o dashboard da cozinha com as salas e totais
  */
 function exibirDashboardCozinha(salas) {
-    console.log("🖼️ Exibindo dashboard com salas:", Object.keys(salas));
     const listaSalas = document.getElementById('listaSalas');
     
     if (!salas || Object.keys(salas).length === 0) {
-        console.log("⚠️ Nenhuma sala para exibir");
         listaSalas.innerHTML = '<div class="empty-message">Nenhuma sala criada ainda.</div>';
         atualizarTotais(0, 0);
-        // Atualizar demanda para zero
-        const demanda = calcularDemanda(0, 0, false);
-        atualizarDemandaUI(demanda);
+        atualizarDemandaUI(calcularDemanda(0, 0, false));
         return;
     }
     
-    // Limpar conteúdo
     listaSalas.innerHTML = '';
     
-    // Converter objeto em array para ordenar
     const salasArray = Object.entries(salas).map(([id, sala]) => ({
         id,
         ...sala
     }));
     
-    console.log("📋 Total de salas a exibir:", salasArray.length);
-    
-    // Ordenar: salas especiais primeiro, depois por tipo (adulto, infantil)
     salasArray.sort((a, b) => {
         if (a.especial && !b.especial) return -1;
         if (!a.especial && b.especial) return 1;
@@ -338,29 +268,24 @@ function exibirDashboardCozinha(salas) {
         return a.nome.localeCompare(b.nome);
     });
     
-    // Criar elemento para cada sala
     salasArray.forEach(sala => {
         const div = document.createElement('div');
         div.className = 'sala-item';
         
-        // Adicionar classe de tipo
         if (sala.tipo === 'infantil') {
             div.classList.add('infantil');
         }
         
-        // Adicionar classe especial se aplicável
         if (sala.especial) {
             div.classList.add('especial');
         }
         
-        // Nome da sala com ícone para sala especial
         const nomeDiv = document.createElement('div');
         nomeDiv.className = 'sala-nome';
         nomeDiv.innerHTML = sala.especial 
             ? `<span class="especial-icon">⭐</span>${sala.nome}` 
             : sala.nome;
         
-        // Quantidade de pessoas
         const pessoasDiv = document.createElement('div');
         pessoasDiv.className = 'sala-pessoas';
         pessoasDiv.textContent = sala.pessoas || 0;
@@ -368,13 +293,8 @@ function exibirDashboardCozinha(salas) {
         div.appendChild(nomeDiv);
         div.appendChild(pessoasDiv);
         listaSalas.appendChild(div);
-        
-        console.log(`  ✅ Sala exibida: ${sala.nome} - ${sala.pessoas || 0} pessoas`);
     });
     
-    console.log("✅ Dashboard atualizado com sucesso!");
-    
-    // Calcular e atualizar totais
     calcularTotais(salasArray);
 }
 
@@ -394,7 +314,6 @@ function calcularTotais(salasArray) {
             totalCriancas += pessoas;
         }
         
-        // Verificar se há sala especial ativa
         if (sala.especial) {
             temSalaEspecial = true;
         }
@@ -402,11 +321,8 @@ function calcularTotais(salasArray) {
     
     atualizarTotais(totalAdultos, totalCriancas);
     
-    // Calcular e atualizar demanda (Fase 5)
     const demanda = calcularDemanda(totalAdultos, totalCriancas, temSalaEspecial);
     atualizarDemandaUI(demanda);
-    
-    // Verificar mudança de demanda e resetar status se necessário (Fase 6)
     verificarMudancaDemanda(demanda);
 }
 
@@ -419,8 +335,6 @@ function atualizarTotais(totalAdultos, totalCriancas) {
     document.getElementById('totalAdultos').textContent = totalAdultos;
     document.getElementById('totalCriancas').textContent = totalCriancas;
     document.getElementById('totalGeral').textContent = totalGeral;
-    
-    console.log(`📊 Totais: Adultos=${totalAdultos}, Crianças=${totalCriancas}, Geral=${totalGeral}`);
 }
 
 // ============================================
@@ -451,7 +365,6 @@ function inicializarProducao() {
     producaoRef.once('value')
         .then((snapshot) => {
             if (!snapshot.exists()) {
-                // Criar estrutura inicial
                 const producaoInicial = {
                     cafe: {
                         status: STATUS_PRODUCAO.A_PRODUZIR,
@@ -470,9 +383,6 @@ function inicializarProducao() {
                 return producaoRef.set(producaoInicial);
             }
         })
-        .then(() => {
-            console.log("✅ Estrutura de produção inicializada");
-        })
         .catch((error) => {
             console.error("❌ Erro ao inicializar produção:", error);
         });
@@ -480,8 +390,6 @@ function inicializarProducao() {
 
 /**
  * Atualiza o status de um item de produção
- * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
- * @param {string} novoStatus - Novo status do item
  */
 function atualizarStatusProducao(item, novoStatus) {
     const producaoRef = db.ref(`/producao/${item}`);
@@ -492,20 +400,15 @@ function atualizarStatusProducao(item, novoStatus) {
     };
     
     producaoRef.update(update)
-        .then(() => {
-            console.log(`✅ Status de ${item} atualizado para ${novoStatus}`);
-        })
         .catch((error) => {
             console.error(`❌ Erro ao atualizar status de ${item}:`, error);
         });
 }
 
 /**
- * Marca um item como PRONTO e realiza baixa automática do estoque (Fase 7)
- * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
+ * Marca um item como PRONTO e realiza baixa automática do estoque
  */
 function marcarComoPronto(item) {
-    // Verificar se já foi marcado como pronto antes
     const producaoRef = db.ref(`/producao/${item}`);
     
     producaoRef.once('value')
@@ -513,13 +416,10 @@ function marcarComoPronto(item) {
             if (snapshot.exists()) {
                 const producaoData = snapshot.val();
                 
-                // Se já está pronto, não fazer nada
                 if (producaoData.status === STATUS_PRODUCAO.PRONTO) {
-                    console.log(`⚠️ Item ${item} já está marcado como PRONTO`);
                     return Promise.reject('JA_PRONTO');
                 }
                 
-                // Obter a demanda atual para calcular quanto baixar do estoque
                 return db.ref('/salas').once('value');
             }
         })
@@ -541,10 +441,8 @@ function marcarComoPronto(item) {
                 });
             }
             
-            // Calcular demanda atual
             const demanda = calcularDemanda(totalAdultos, totalCriancas, false);
             
-            // Definir qual quantidade baixar do estoque
             let quantidadeBaixar = 0;
             if (item === 'cafe') {
                 quantidadeBaixar = demanda.cafe;
@@ -554,22 +452,18 @@ function marcarComoPronto(item) {
                 quantidadeBaixar = demanda.alimentoInfantil;
             }
             
-            // Realizar baixa automática do estoque
             if (quantidadeBaixar > 0) {
                 return baixarEstoqueAutomatico(item, quantidadeBaixar);
             }
         })
         .then(() => {
-            // Atualizar status para PRONTO
             return atualizarStatusProducao(item, STATUS_PRODUCAO.PRONTO);
         })
         .catch((error) => {
-            if (error === 'JA_PRONTO') {
-                // Ignorar se já estava pronto
-                return;
+            if (error !== 'JA_PRONTO') {
+                console.error(`❌ Erro ao marcar ${item} como pronto:`, error);
+                alert('Erro ao marcar item como pronto');
             }
-            console.error(`❌ Erro ao marcar ${item} como pronto:`, error);
-            alert('Erro ao marcar item como pronto');
         });
 }
 
@@ -583,16 +477,13 @@ function resetarStatusProducao(item) {
 
 /**
  * Escuta mudanças no status de produção em tempo real
- * @param {Function} callback - Função a ser chamada quando houver mudanças
  */
 function escutarStatusProducao(callback) {
     const producaoRef = db.ref('/producao');
     
     producaoRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
-            const producao = snapshot.val();
-            console.log("🔄 Status de produção atualizado:", producao);
-            callback(producao);
+            callback(snapshot.val());
         }
     }, (error) => {
         console.error("❌ Erro ao escutar status de produção:", error);
@@ -601,53 +492,38 @@ function escutarStatusProducao(callback) {
 
 /**
  * Retorna o emoji correspondente ao status
- * @param {string} status - Status do item
- * @returns {string} Emoji correspondente
  */
 function getEmojiStatus(status) {
-    switch (status) {
-        case STATUS_PRODUCAO.A_PRODUZIR:
-            return "🟡";
-        case STATUS_PRODUCAO.EM_PRODUCAO:
-            return "🔴";
-        case STATUS_PRODUCAO.PRONTO:
-            return "🟢";
-        default:
-            return "⚪";
-    }
+    const statusMap = {
+        [STATUS_PRODUCAO.A_PRODUZIR]: "🟡",
+        [STATUS_PRODUCAO.EM_PRODUCAO]: "🔴",
+        [STATUS_PRODUCAO.PRONTO]: "🟢"
+    };
+    return statusMap[status] || "⚪";
 }
 
 /**
  * Retorna o texto formatado do status
- * @param {string} status - Status do item
- * @returns {string} Texto formatado
  */
 function getTextoStatus(status) {
-    switch (status) {
-        case STATUS_PRODUCAO.A_PRODUZIR:
-            return "A PRODUZIR";
-        case STATUS_PRODUCAO.EM_PRODUCAO:
-            return "EM PRODUÇÃO";
-        case STATUS_PRODUCAO.PRONTO:
-            return "PRONTO";
-        default:
-            return "DESCONHECIDO";
-    }
+    const statusMap = {
+        [STATUS_PRODUCAO.A_PRODUZIR]: "A PRODUZIR",
+        [STATUS_PRODUCAO.EM_PRODUCAO]: "EM PRODUÇÃO",
+        [STATUS_PRODUCAO.PRONTO]: "PRONTO"
+    };
+    return statusMap[status] || "DESCONHECIDO";
 }
 
 /**
  * Verifica se a demanda mudou e reseta status se necessário
- * @param {Object} demandaAtual - Demanda atual calculada
  */
 function verificarMudancaDemanda(demandaAtual) {
     const producaoRef = db.ref('/producao');
     
-    // Verificar se houve aumento na demanda
     const aumentouCafe = demandaAtual.cafe > estadoProducao.demandaAnterior.cafe;
     const aumentouAlimentoAdulto = demandaAtual.alimentoAdulto > estadoProducao.demandaAnterior.alimentoAdulto;
     const aumentouAlimentoInfantil = demandaAtual.alimentoInfantil > estadoProducao.demandaAnterior.alimentoInfantil;
     
-    // Se houve aumento, resetar os status correspondentes
     if (aumentouCafe || aumentouAlimentoAdulto || aumentouAlimentoInfantil) {
         producaoRef.once('value')
             .then((snapshot) => {
@@ -660,7 +536,6 @@ function verificarMudancaDemanda(demandaAtual) {
                             status: STATUS_PRODUCAO.A_PRODUZIR,
                             atualizadoEm: new Date().toISOString()
                         };
-                        console.log("🔄 Demanda de café aumentou - resetando status");
                     }
                     
                     if (aumentouAlimentoAdulto && producao.alimentoAdulto.status === STATUS_PRODUCAO.PRONTO) {
@@ -668,7 +543,6 @@ function verificarMudancaDemanda(demandaAtual) {
                             status: STATUS_PRODUCAO.A_PRODUZIR,
                             atualizadoEm: new Date().toISOString()
                         };
-                        console.log("🔄 Demanda de alimento adulto aumentou - resetando status");
                     }
                     
                     if (aumentouAlimentoInfantil && producao.alimentoInfantil.status === STATUS_PRODUCAO.PRONTO) {
@@ -676,7 +550,6 @@ function verificarMudancaDemanda(demandaAtual) {
                             status: STATUS_PRODUCAO.A_PRODUZIR,
                             atualizadoEm: new Date().toISOString()
                         };
-                        console.log("🔄 Demanda de alimento infantil aumentou - resetando status");
                     }
                     
                     if (Object.keys(updates).length > 0) {
@@ -689,7 +562,6 @@ function verificarMudancaDemanda(demandaAtual) {
             });
     }
     
-    // Atualizar demanda anterior
     estadoProducao.demandaAnterior = {
         cafe: demandaAtual.cafe,
         alimentoAdulto: demandaAtual.alimentoAdulto,
@@ -718,29 +590,20 @@ const PARAMETROS_CONSUMO = {
 
 /**
  * Calcula a demanda de café e alimentos
- * @param {number} totalAdultos - Total de adultos presentes
- * @param {number} totalCriancas - Total de crianças presentes
- * @param {boolean} temSalaEspecial - Se existe sala especial ativa
- * @returns {Object} Objeto com as demandas calculadas
  */
 function calcularDemanda(totalAdultos, totalCriancas, temSalaEspecial) {
-    // Cálculo base
-    const cafeBase = totalAdultos * PARAMETROS_CONSUMO.adulto.cafe; // ml
-    const alimentoAdultoBase = totalAdultos * PARAMETROS_CONSUMO.adulto.alimento; // g
-    const alimentoInfantilBase = totalCriancas * PARAMETROS_CONSUMO.crianca.alimento; // g
+    const cafeBase = totalAdultos * PARAMETROS_CONSUMO.adulto.cafe;
+    const alimentoAdultoBase = totalAdultos * PARAMETROS_CONSUMO.adulto.alimento;
+    const alimentoInfantilBase = totalCriancas * PARAMETROS_CONSUMO.crianca.alimento;
     
-    // Aplicar margem de segurança
     const margem = 1 + PARAMETROS_CONSUMO.margemSeguranca;
-    const cafe = cafeBase * margem; // ml
-    const alimentoAdulto = alimentoAdultoBase * margem; // g
-    const alimentoInfantil = alimentoInfantilBase * margem; // g
+    const cafe = cafeBase * margem;
+    const alimentoAdulto = alimentoAdultoBase * margem;
+    const alimentoInfantil = alimentoInfantilBase * margem;
     
-    // Converter e arredondar de forma prática
-    const cafeLitros = arredondarPratico(cafe / 1000); // ml para litros
-    const alimentoAdultoKg = arredondarPratico(alimentoAdulto / 1000); // g para kg
-    const alimentoInfantilKg = arredondarPratico(alimentoInfantil / 1000); // g para kg
-    
-    console.log(`🧮 Demanda calculada: Café=${cafeLitros}L, Alimento adulto=${alimentoAdultoKg}kg, Alimento infantil=${alimentoInfantilKg}kg`);
+    const cafeLitros = arredondarPratico(cafe / 1000);
+    const alimentoAdultoKg = arredondarPratico(alimentoAdulto / 1000);
+    const alimentoInfantilKg = arredondarPratico(alimentoInfantil / 1000);
     
     return {
         cafe: cafeLitros,
@@ -752,23 +615,15 @@ function calcularDemanda(totalAdultos, totalCriancas, temSalaEspecial) {
 }
 
 /**
- * Arredonda valores de forma prática para cima
- * Se o valor não for múltiplo exato de 0,5, arredonda para o próximo 0,5 acima
- * Se o valor já for múltiplo exato de 0,5, mantém o valor
+ * Arredonda valores para o próximo múltiplo de 0,5
  * Exemplos: 12,3 → 12,5 | 12,6 → 13,0 | 12,0 → 12,0 | 12,5 → 12,5
- * @param {number} valor - Valor a ser arredondado
- * @returns {number} Valor arredondado para o próximo múltiplo de 0,5
  */
 function arredondarPratico(valor) {
-    // Math.ceil arredonda para cima, mas valores já exatos permanecem iguais
     return Math.ceil(valor * 2) / 2;
 }
 
 /**
  * Formata número com vírgula (padrão brasileiro)
- * @param {number} numero - Número a ser formatado
- * @param {number} decimais - Quantidade de casas decimais
- * @returns {string} Número formatado com vírgula
  */
 function formatarNumero(numero, decimais = 1) {
     return numero.toFixed(decimais).replace('.', ',');
@@ -776,10 +631,8 @@ function formatarNumero(numero, decimais = 1) {
 
 /**
  * Atualiza a interface com os valores de demanda calculados
- * @param {Object} demanda - Objeto com os valores de demanda
  */
 function atualizarDemandaUI(demanda) {
-    // Atualizar valores de demanda com verificação de elementos
     const elemCafe = document.getElementById('demandaCafe');
     const elemAlimentoAdulto = document.getElementById('demandaAlimentoAdulto');
     const elemAlimentoInfantil = document.getElementById('demandaAlimentoInfantil');
@@ -788,24 +641,14 @@ function atualizarDemandaUI(demanda) {
     if (elemAlimentoAdulto) elemAlimentoAdulto.textContent = `${formatarNumero(demanda.alimentoAdulto)} kg`;
     if (elemAlimentoInfantil) elemAlimentoInfantil.textContent = `${formatarNumero(demanda.alimentoInfantil)} kg`;
     
-    // Controlar alerta de produzir
     const alertaProduzir = document.getElementById('alertaProduzir');
     if (alertaProduzir) {
-        if (demanda.temPessoas) {
-            alertaProduzir.classList.add('ativo');
-        } else {
-            alertaProduzir.classList.remove('ativo');
-        }
+        alertaProduzir.classList.toggle('ativo', demanda.temPessoas);
     }
     
-    // Controlar alerta de sala especial
     const alertaEspecial = document.getElementById('alertaEspecial');
     if (alertaEspecial) {
-        if (demanda.temSalaEspecial) {
-            alertaEspecial.classList.add('ativo');
-        } else {
-            alertaEspecial.classList.remove('ativo');
-        }
+        alertaEspecial.classList.toggle('ativo', demanda.temSalaEspecial);
     }
 }
 
@@ -822,7 +665,6 @@ function inicializarEstoque() {
     estoqueRef.once('value')
         .then((snapshot) => {
             if (!snapshot.exists()) {
-                // Criar estrutura inicial
                 const estoqueInicial = {
                     cafe: {
                         nome: "Café",
@@ -847,9 +689,6 @@ function inicializarEstoque() {
                 return estoqueRef.set(estoqueInicial);
             }
         })
-        .then(() => {
-            console.log("✅ Estrutura de estoque inicializada");
-        })
         .catch((error) => {
             console.error("❌ Erro ao inicializar estoque:", error);
         });
@@ -857,16 +696,13 @@ function inicializarEstoque() {
 
 /**
  * Escuta mudanças no estoque em tempo real
- * @param {Function} callback - Função a ser chamada quando houver mudanças
  */
 function escutarEstoque(callback) {
     const estoqueRef = db.ref('/estoque');
     
     estoqueRef.on('value', (snapshot) => {
         if (snapshot.exists()) {
-            const estoque = snapshot.val();
-            console.log("🔄 Estoque atualizado:", estoque);
-            callback(estoque);
+            callback(snapshot.val());
         }
     }, (error) => {
         console.error("❌ Erro ao escutar estoque:", error);
@@ -875,8 +711,6 @@ function escutarEstoque(callback) {
 
 /**
  * Adiciona quantidade ao estoque (entrada manual)
- * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
- * @param {number} quantidade - Quantidade a adicionar
  */
 function entradaEstoque(item, quantidade) {
     const itemRef = db.ref(`/estoque/${item}`);
@@ -889,9 +723,6 @@ function entradaEstoque(item, quantidade) {
                 return itemRef.update({ quantidadeAtual: novaQuantidade });
             }
         })
-        .then(() => {
-            console.log(`✅ Entrada de estoque: +${quantidade} em ${item}`);
-        })
         .catch((error) => {
             console.error(`❌ Erro ao adicionar estoque de ${item}:`, error);
         });
@@ -899,8 +730,6 @@ function entradaEstoque(item, quantidade) {
 
 /**
  * Remove quantidade do estoque (saída manual)
- * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
- * @param {number} quantidade - Quantidade a remover
  */
 function saidaEstoque(item, quantidade) {
     const itemRef = db.ref(`/estoque/${item}`);
@@ -919,9 +748,6 @@ function saidaEstoque(item, quantidade) {
                 return itemRef.update({ quantidadeAtual: novaQuantidade });
             }
         })
-        .then(() => {
-            console.log(`✅ Saída de estoque: -${quantidade} em ${item}`);
-        })
         .catch((error) => {
             console.error(`❌ Erro ao remover estoque de ${item}:`, error);
         });
@@ -929,15 +755,12 @@ function saidaEstoque(item, quantidade) {
 
 /**
  * Atualiza o estoque mínimo de um item
- * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
- * @param {number} novoMinimo - Novo valor de estoque mínimo
  */
 function atualizarEstoqueMinimoFirebase(item, novoMinimo) {
     const itemRef = db.ref(`/estoque/${item}`);
     
     itemRef.update({ estoqueMinimo: novoMinimo })
         .then(() => {
-            console.log(`✅ Estoque mínimo de ${item} atualizado para ${novoMinimo}`);
             alert('Estoque mínimo atualizado com sucesso!');
         })
         .catch((error) => {
@@ -948,8 +771,6 @@ function atualizarEstoqueMinimoFirebase(item, novoMinimo) {
 
 /**
  * Realiza baixa automática do estoque baseado na produção pronta
- * @param {string} item - Nome do item (cafe, alimentoAdulto, alimentoInfantil)
- * @param {number} quantidadeProduzida - Quantidade produzida a ser baixada
  */
 function baixarEstoqueAutomatico(item, quantidadeProduzida) {
     const itemRef = db.ref(`/estoque/${item}`);
@@ -962,9 +783,6 @@ function baixarEstoqueAutomatico(item, quantidadeProduzida) {
                 return itemRef.update({ quantidadeAtual: novaQuantidade });
             }
         })
-        .then(() => {
-            console.log(`✅ Baixa automática: -${quantidadeProduzida} em ${item}`);
-        })
         .catch((error) => {
             console.error(`❌ Erro ao baixar estoque de ${item}:`, error);
             throw error;
@@ -973,8 +791,6 @@ function baixarEstoqueAutomatico(item, quantidadeProduzida) {
 
 /**
  * Verifica se há estoque suficiente para produzir
- * @param {Object} demanda - Objeto com cafe, alimentoAdulto, alimentoInfantil
- * @returns {Promise<Object>} Objeto com {suficiente: boolean, faltantes: array}
  */
 function verificarEstoqueSuficiente(demanda) {
     const estoqueRef = db.ref('/estoque');
@@ -988,18 +804,17 @@ function verificarEstoqueSuficiente(demanda) {
             const estoque = snapshot.val();
             const faltantes = [];
             
-            // Verificar cada item
-            if (demanda.cafe > 0 && estoque.cafe.quantidadeAtual < demanda.cafe) {
-                faltantes.push(`Café (necessário: ${formatarNumero(demanda.cafe)}L, disponível: ${formatarNumero(estoque.cafe.quantidadeAtual)}L)`);
-            }
+            const items = [
+                { key: 'cafe', nome: 'Café', unidade: 'L' },
+                { key: 'alimentoAdulto', nome: 'Alimento Adulto', unidade: 'kg' },
+                { key: 'alimentoInfantil', nome: 'Alimento Infantil', unidade: 'kg' }
+            ];
             
-            if (demanda.alimentoAdulto > 0 && estoque.alimentoAdulto.quantidadeAtual < demanda.alimentoAdulto) {
-                faltantes.push(`Alimento Adulto (necessário: ${formatarNumero(demanda.alimentoAdulto)}kg, disponível: ${formatarNumero(estoque.alimentoAdulto.quantidadeAtual)}kg)`);
-            }
-            
-            if (demanda.alimentoInfantil > 0 && estoque.alimentoInfantil.quantidadeAtual < demanda.alimentoInfantil) {
-                faltantes.push(`Alimento Infantil (necessário: ${formatarNumero(demanda.alimentoInfantil)}kg, disponível: ${formatarNumero(estoque.alimentoInfantil.quantidadeAtual)}kg)`);
-            }
+            items.forEach(item => {
+                if (demanda[item.key] > 0 && estoque[item.key].quantidadeAtual < demanda[item.key]) {
+                    faltantes.push(`${item.nome} (necessário: ${formatarNumero(demanda[item.key])}${item.unidade}, disponível: ${formatarNumero(estoque[item.key].quantidadeAtual)}${item.unidade})`);
+                }
+            });
             
             return {
                 suficiente: faltantes.length === 0,
