@@ -492,38 +492,26 @@ function escutarStatusProducao(callback) {
 
 /**
  * Retorna o emoji correspondente ao status
- * @param {string} status - Status do item
- * @returns {string} Emoji correspondente
  */
 function getEmojiStatus(status) {
-    switch (status) {
-        case STATUS_PRODUCAO.A_PRODUZIR:
-            return "🟡";
-        case STATUS_PRODUCAO.EM_PRODUCAO:
-            return "🔴";
-        case STATUS_PRODUCAO.PRONTO:
-            return "🟢";
-        default:
-            return "⚪";
-    }
+    const statusMap = {
+        [STATUS_PRODUCAO.A_PRODUZIR]: "🟡",
+        [STATUS_PRODUCAO.EM_PRODUCAO]: "🔴",
+        [STATUS_PRODUCAO.PRONTO]: "🟢"
+    };
+    return statusMap[status] || "⚪";
 }
 
 /**
  * Retorna o texto formatado do status
- * @param {string} status - Status do item
- * @returns {string} Texto formatado
  */
 function getTextoStatus(status) {
-    switch (status) {
-        case STATUS_PRODUCAO.A_PRODUZIR:
-            return "A PRODUZIR";
-        case STATUS_PRODUCAO.EM_PRODUCAO:
-            return "EM PRODUÇÃO";
-        case STATUS_PRODUCAO.PRONTO:
-            return "PRONTO";
-        default:
-            return "DESCONHECIDO";
-    }
+    const statusMap = {
+        [STATUS_PRODUCAO.A_PRODUZIR]: "A PRODUZIR",
+        [STATUS_PRODUCAO.EM_PRODUCAO]: "EM PRODUÇÃO",
+        [STATUS_PRODUCAO.PRONTO]: "PRONTO"
+    };
+    return statusMap[status] || "DESCONHECIDO";
 }
 
 /**
@@ -627,23 +615,15 @@ function calcularDemanda(totalAdultos, totalCriancas, temSalaEspecial) {
 }
 
 /**
- * Arredonda valores de forma prática para cima
- * Se o valor não for múltiplo exato de 0,5, arredonda para o próximo 0,5 acima
- * Se o valor já for múltiplo exato de 0,5, mantém o valor
+ * Arredonda valores para o próximo múltiplo de 0,5
  * Exemplos: 12,3 → 12,5 | 12,6 → 13,0 | 12,0 → 12,0 | 12,5 → 12,5
- * @param {number} valor - Valor a ser arredondado
- * @returns {number} Valor arredondado para o próximo múltiplo de 0,5
  */
 function arredondarPratico(valor) {
-    // Math.ceil arredonda para cima, mas valores já exatos permanecem iguais
     return Math.ceil(valor * 2) / 2;
 }
 
 /**
  * Formata número com vírgula (padrão brasileiro)
- * @param {number} numero - Número a ser formatado
- * @param {number} decimais - Quantidade de casas decimais
- * @returns {string} Número formatado com vírgula
  */
 function formatarNumero(numero, decimais = 1) {
     return numero.toFixed(decimais).replace('.', ',');
@@ -651,10 +631,8 @@ function formatarNumero(numero, decimais = 1) {
 
 /**
  * Atualiza a interface com os valores de demanda calculados
- * @param {Object} demanda - Objeto com os valores de demanda
  */
 function atualizarDemandaUI(demanda) {
-    // Atualizar valores de demanda com verificação de elementos
     const elemCafe = document.getElementById('demandaCafe');
     const elemAlimentoAdulto = document.getElementById('demandaAlimentoAdulto');
     const elemAlimentoInfantil = document.getElementById('demandaAlimentoInfantil');
@@ -663,24 +641,14 @@ function atualizarDemandaUI(demanda) {
     if (elemAlimentoAdulto) elemAlimentoAdulto.textContent = `${formatarNumero(demanda.alimentoAdulto)} kg`;
     if (elemAlimentoInfantil) elemAlimentoInfantil.textContent = `${formatarNumero(demanda.alimentoInfantil)} kg`;
     
-    // Controlar alerta de produzir
     const alertaProduzir = document.getElementById('alertaProduzir');
     if (alertaProduzir) {
-        if (demanda.temPessoas) {
-            alertaProduzir.classList.add('ativo');
-        } else {
-            alertaProduzir.classList.remove('ativo');
-        }
+        alertaProduzir.classList.toggle('ativo', demanda.temPessoas);
     }
     
-    // Controlar alerta de sala especial
     const alertaEspecial = document.getElementById('alertaEspecial');
     if (alertaEspecial) {
-        if (demanda.temSalaEspecial) {
-            alertaEspecial.classList.add('ativo');
-        } else {
-            alertaEspecial.classList.remove('ativo');
-        }
+        alertaEspecial.classList.toggle('ativo', demanda.temSalaEspecial);
     }
 }
 
@@ -823,8 +791,6 @@ function baixarEstoqueAutomatico(item, quantidadeProduzida) {
 
 /**
  * Verifica se há estoque suficiente para produzir
- * @param {Object} demanda - Objeto com cafe, alimentoAdulto, alimentoInfantil
- * @returns {Promise<Object>} Objeto com {suficiente: boolean, faltantes: array}
  */
 function verificarEstoqueSuficiente(demanda) {
     const estoqueRef = db.ref('/estoque');
@@ -838,18 +804,17 @@ function verificarEstoqueSuficiente(demanda) {
             const estoque = snapshot.val();
             const faltantes = [];
             
-            // Verificar cada item
-            if (demanda.cafe > 0 && estoque.cafe.quantidadeAtual < demanda.cafe) {
-                faltantes.push(`Café (necessário: ${formatarNumero(demanda.cafe)}L, disponível: ${formatarNumero(estoque.cafe.quantidadeAtual)}L)`);
-            }
+            const items = [
+                { key: 'cafe', nome: 'Café', unidade: 'L' },
+                { key: 'alimentoAdulto', nome: 'Alimento Adulto', unidade: 'kg' },
+                { key: 'alimentoInfantil', nome: 'Alimento Infantil', unidade: 'kg' }
+            ];
             
-            if (demanda.alimentoAdulto > 0 && estoque.alimentoAdulto.quantidadeAtual < demanda.alimentoAdulto) {
-                faltantes.push(`Alimento Adulto (necessário: ${formatarNumero(demanda.alimentoAdulto)}kg, disponível: ${formatarNumero(estoque.alimentoAdulto.quantidadeAtual)}kg)`);
-            }
-            
-            if (demanda.alimentoInfantil > 0 && estoque.alimentoInfantil.quantidadeAtual < demanda.alimentoInfantil) {
-                faltantes.push(`Alimento Infantil (necessário: ${formatarNumero(demanda.alimentoInfantil)}kg, disponível: ${formatarNumero(estoque.alimentoInfantil.quantidadeAtual)}kg)`);
-            }
+            items.forEach(item => {
+                if (demanda[item.key] > 0 && estoque[item.key].quantidadeAtual < demanda[item.key]) {
+                    faltantes.push(`${item.nome} (necessário: ${formatarNumero(demanda[item.key])}${item.unidade}, disponível: ${formatarNumero(estoque[item.key].quantidadeAtual)}${item.unidade})`);
+                }
+            });
             
             return {
                 suficiente: faltantes.length === 0,
