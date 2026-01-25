@@ -1,0 +1,80 @@
+.producao-section {
+  padding: 30px;
+  background-color: #e8f5e9;
+  border-radius: 8px;
+  border: 2px solid #4CAF50;
+}
+
+.producao-item {
+  margin-bottom: 25px;
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  border-left: 5px solid #4CAF50;
+}
+
+.producao-item:last-child {
+  margin-bottom: 0;
+}
+
+.producao-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.producao-nome {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #333;
+}
+
+.producao-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.3em;
+}
+
+.status-emoji {
+  font-size: 1.5em;
+}
+
+.status-texto {
+  font-weight: bold;
+}
+
+.status-texto.A_PRODUZIR {
+  color: #f57f17;
+}
+
+.status-texto.EM_PRODUCAO {
+  color: #d32f2f;
+}
+
+.status-texto.PRONTO {
+  color: #388e3c;
+}
+
+.btn-pronto {
+  padding: 12px 25px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+  background-color: #4CAF50;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+}
+
+.btn-pronto:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.btn-pronto:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

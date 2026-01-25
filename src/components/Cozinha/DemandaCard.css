@@ -1,0 +1,58 @@
+.demanda-section {
+  padding: 30px;
+  background-color: #fff3e0;
+  border-radius: 8px;
+  border: 2px solid #FF9800;
+}
+
+.demanda-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-size: 1.6em;
+}
+
+.demanda-label {
+  font-weight: normal;
+  color: #333;
+}
+
+.demanda-valor {
+  font-weight: bold;
+  color: #E65100;
+  font-size: 1.2em;
+}
+
+.alerta-produzir {
+  margin-top: 30px;
+  padding: 25px;
+  background-color: #ffebee;
+  border: 3px solid #f44336;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #c62828;
+  display: none;
+}
+
+.alerta-produzir.ativo {
+  display: block;
+}
+
+.alerta-especial {
+  margin-top: 15px;
+  padding: 20px;
+  background-color: #fffacd;
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #f57c00;
+  display: none;
+}
+
+.alerta-especial.ativo {
+  display: block;
+}
