@@ -1,6 +1,24 @@
 # U.C.D Coffee Break
 
-Sistema simples e leve de gerenciamento para igrejas, hospedado no GitHub Pages e usando Firebase Realtime Database.
+Sistema moderno de gerenciamento para igrejas, desenvolvido com **React + Vite** e Firebase Realtime Database.
+
+## 🎉 **NOVA VERSÃO - React + Vite**
+
+O sistema foi **completamente migrado** para React + Vite! 
+
+- 📚 **Nova documentação**: Consulte [README_REACT.md](./README_REACT.md) para instruções completas
+- 📋 **Detalhes da migração**: Veja [MIGRATION_COMPLETE.md](./MIGRATION_COMPLETE.md) 
+- 📁 **Versão antiga preservada**: Arquivos HTML originais salvos como `*.html.old`
+
+### Início Rápido (Nova Versão React)
+```bash
+npm install
+npm run dev
+```
+
+---
+
+## Documentação da Versão Anterior (HTML)
 
 ## ⚠️ ATENÇÃO: Configuração Necessária
 

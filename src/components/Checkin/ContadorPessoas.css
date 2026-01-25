@@ -1,0 +1,56 @@
+.contador {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.contador-valor {
+  font-size: 3em;
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.contador-label {
+  font-size: 1.2em;
+  color: #666;
+  margin-top: 5px;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-adicionar,
+.btn-remover {
+  flex: 1;
+  padding: 15px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-adicionar {
+  background-color: #4CAF50;
+}
+
+.btn-adicionar:hover {
+  background-color: #45a049;
+}
+
+.btn-remover {
+  background-color: #f44336;
+}
+
+.btn-remover:hover:not(:disabled) {
+  background-color: #da190b;
+}
+
+.btn-remover:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}

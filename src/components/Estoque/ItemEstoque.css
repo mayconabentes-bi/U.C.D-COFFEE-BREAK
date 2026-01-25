@@ -1,0 +1,152 @@
+.item-estoque {
+  padding: 25px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  border-left: 5px solid #4CAF50;
+}
+
+.item-estoque.alerta {
+  border-left-color: #f44336;
+  background-color: #ffebee;
+}
+
+.item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.item-nome {
+  font-size: 1.6em;
+  font-weight: bold;
+  color: #333;
+}
+
+.item-nome .emoji {
+  font-size: 1.2em;
+  margin-right: 10px;
+}
+
+.alerta-badge {
+  padding: 8px 15px;
+  background-color: #f44336;
+  color: white;
+  border-radius: 20px;
+  font-weight: bold;
+  font-size: 1em;
+  display: none;
+}
+
+.alerta-badge.ativo {
+  display: block;
+}
+
+.item-info {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.info-box {
+  padding: 15px;
+  background-color: white;
+  border-radius: 6px;
+  border: 2px solid #ddd;
+}
+
+.info-label {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.info-valor {
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #2196F3;
+}
+
+.info-unidade {
+  font-size: 1.2em;
+  color: #666;
+  margin-left: 5px;
+}
+
+.controles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.controle-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.controle-label {
+  font-size: 0.95em;
+  font-weight: bold;
+  color: #555;
+}
+
+.btn-group {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-adicionar,
+.btn-remover,
+.btn-salvar {
+  padding: 12px 20px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  flex: 1;
+}
+
+.btn-adicionar {
+  background-color: #4CAF50;
+}
+
+.btn-adicionar:hover {
+  background-color: #45a049;
+}
+
+.btn-remover {
+  background-color: #f44336;
+}
+
+.btn-remover:hover {
+  background-color: #da190b;
+}
+
+.btn-salvar {
+  background-color: #2196F3;
+}
+
+.btn-salvar:hover {
+  background-color: #1976D2;
+}
+
+.input-minimo {
+  width: 100%;
+  padding: 10px;
+  font-size: 1.1em;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .item-info,
+  .controles {
+    grid-template-columns: 1fr;
+  }
+}
