@@ -25,13 +25,25 @@ firebase-debug.log
 firestore-debug.log
 ui-debug.log
 
-# Node modules (if used in future)
+# Node modules
 node_modules/
 package-lock.json
 
-# Environment files (if used in future)
+# Environment files
 .env
 .env.local
+.env.production
 
 # Firebase configuration (contains sensitive data)
 firebase-config.js
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Vite
+.vite
+
+# ESLint cache
+.eslintcache
