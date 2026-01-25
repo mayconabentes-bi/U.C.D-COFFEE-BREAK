@@ -97,11 +97,13 @@ npm run dev
 Você verá uma mensagem similar a:
 
 ```
-  VITE v5.x.x  ready in XXX ms
+  VITE v5.0.x  ready in XXX ms
 
   ➜  Local:   http://localhost:3000/
   ➜  Network: use --host to expose
 ```
+
+**Nota:** O servidor está configurado para usar a porta 3000 (veja `vite.config.js`)
 
 ## 🌐 Passo 5: Acessar o Sistema
 
